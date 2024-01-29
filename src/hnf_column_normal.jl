@@ -17,7 +17,6 @@ function hnf_with_normal_transform_column(A)
 
     # We then get the HNF of this matrix
     H_star, V_star = hnf_with_transform_column(B)
-    println(H_star)
 
     # return H_star
 
