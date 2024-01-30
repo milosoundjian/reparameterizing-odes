@@ -1,0 +1,46 @@
+include("../src/hnf_column_normal.jl")
+
+K = matrix(ZZ, [
+    [0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1],
+    [-1, 0, 1, 0, 2],
+    [0, 0, 1, -1, 0]
+])
+
+H, U = hnf_with_transform(K)
+
+H
+
+r = count_zero_rows(H)
+
+U
+
+# A is the last r rows of U
+A = U[end-r+1:end, :]
+
+A_paper = matrix(ZZ, [[1, 1, 1, 1, -1, 0, 0], [0, 0, -1, -3, 1, 1, 1]])
+A * K
+
+# ----------------------------------------
+
+H1, V = hnf_with_normal_transform_column(A)
+
+V
+
+# The first r columns of V
+Vi = V[:, 1:r]
+
+# The last n-r columns of V
+Vn = V[:, r+1:end]
+
+W = inv(V)
+
+# The first r rows of W
+Wu = W[1:r, :]
+
+# The last n-r rows of W
+Wd = W[r+1:end, :]
+
