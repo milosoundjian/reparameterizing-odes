@@ -20,6 +20,8 @@ function count_zero_rows(A)
         end
     end
     return zero_rows
+    # Gleb: can be shortened like:
+    # return length([row for row in 1:n if iszero(A[row, :])])
 end
 
 """

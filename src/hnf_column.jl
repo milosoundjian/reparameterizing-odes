@@ -11,9 +11,13 @@ The function calculates the Hermite column normal form of `A`.
 Output:
 - `H` the hermite column normal form of `A`
 """
+# Gleb: Julia allows type annotations for function arguments, they typically
+# make code more explanatory, here it should be A::ZZMatrix
 function hnf_column(A)
     m = size(A)[1] # number of rows
     n = size(A)[2] # number of columns
+    # Gleb: you can unpack like in python:
+    # (m, n) = size(A)
 
     # make a copy of A
     A1 = deepcopy(A)
