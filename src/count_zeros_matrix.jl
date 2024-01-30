@@ -12,16 +12,7 @@ Output:
 - `zero_rows`: the number of zero rows in `A`
 """
 function count_zero_rows(A)
-    n = size(A, 1)
-    zero_rows = 0
-    for row in 1:n
-        if all(A[row, :] .== 0)
-            zero_rows += 1
-        end
-    end
-    return zero_rows
-    # Gleb: can be shortened like:
-    # return length([row for row in 1:n if iszero(A[row, :])])
+    return length([row for row in 1:n if iszero(A[row, :])])
 end
 
 """
@@ -36,12 +27,5 @@ Output:
 - `zero_columns`: the number of zero columns in `A`
 """
 function count_zero_columns(A)
-    m = size(A, 2)
-    zero_columns = 0
-    for column in 1:m
-        if all(A[:, column] .== 0)
-            zero_columns += 1
-        end
-    end
-    return zero_columns
+    return length([col for col in 1:m if iszero(A[:, col])])
 end
