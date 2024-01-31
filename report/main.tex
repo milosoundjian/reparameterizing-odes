@@ -42,7 +42,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 \usepackage[nottoc, numbib]{tocbibind}
 
 % Added packages
-\usepackage[framemethod=tikz]{mdframed}
+\usepackage[framemethod=tikz]{mdframed} % For better box in abstract
+\usepackage{esdiff} % For differentials
+\usepackage{enumitem} % For step by step methodology
 
 %% \predate{}
 %% \postdate{}
@@ -130,9 +132,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 The main overarching goal of this thesis is to implement an algorithm using scaling invariants and symmetry reduction of dynamical systems to improve the efficiency of solving ODEs computationally. What this means is that given an ODE, say for example the predator-prey model given by the following set of equations:
 \begin{align*}
-    \frac{dn}{dt}
+    \diff{n}{t}
      & = n (r (1 - \frac{n}{K} - k \frac{p}{n + d})), \\
-    \frac{dp}{dt}
+    \diff{p}{t}
      & = sp (1 - h \frac{p}{n})
 \end{align*}
 
@@ -142,7 +144,23 @@ In order to do this, I implemented in Julia, the necessary functions, such as ge
 
 \subsection{Week 1}
 
-The goal of this week was to get familiar with the algorithm I will be working on. To do this I read throught the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
+The goal of this week was to get familiar with the algorithm I will be working on. To do this I read through the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
+
+\section{Methodology}
+
+In this section I will explain with an example the full methodology of the algorithm. The example I use is the the Schackenberg Model for a simple chemical reaction with limit cycle as shown in example 7.4 of \cite{Hubert2013}. The equation for this model is as follows.
+\begin{align*}
+    \diff{x}{t}
+     & = a - kx + hx^2y \\
+    \diff{y}{t}
+     & = b - h x^2 y
+\end{align*}
+
+I explain the process to  work on this from now on.
+
+\begin{enumerate}[label=Step \arabic*:]
+    \item Form the function \(F\) with the Laurent polynomials of the differential equations.
+\end{enumerate}
 
 \newpage
 
