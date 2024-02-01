@@ -53,8 +53,7 @@ Output:
 - `V`: The transform matrix. `A * V = H` and `V` is unimodular
 """
 function hnf_with_transform_column(A)
-    m = size(A)[1] # number of rows
-    n = size(A)[2] # number of columns
+    (m, n) = size(A)
 
     # make a copy of A
     A1 = deepcopy(A)
