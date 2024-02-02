@@ -10,6 +10,19 @@ K = matrix(ZZ, [
     [0, 0, 1, -1, 0]
 ])
 
+# ABKH
+K = matrix(ZZ, [
+    [1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+
+    [0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 1],
+    
+    [1, 1, 1, 1, 1],
+    [-1, 0, 1, 0, 2],
+    [0, 0, 1, -1, 0]
+])
+
 H, U = hnf_with_transform(K)
 
 H
@@ -44,3 +57,4 @@ Wu = W[1:r, :]
 # The last n-r rows of W
 Wd = W[r+1:end, :]
 
+# Now W matches the example

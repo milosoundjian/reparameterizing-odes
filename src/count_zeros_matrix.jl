@@ -12,6 +12,7 @@ Output:
 - `zero_rows`: the number of zero rows in `A`
 """
 function count_zero_rows(A)
+    n = size(A, 1)
     return length([row for row in 1:n if iszero(A[row, :])])
 end
 
@@ -27,5 +28,6 @@ Output:
 - `zero_columns`: the number of zero columns in `A`
 """
 function count_zero_columns(A)
+    m = size(A, 2)
     return length([col for col in 1:m if iszero(A[:, col])])
 end
