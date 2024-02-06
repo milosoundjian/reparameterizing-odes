@@ -1,29 +1,5 @@
 using Nemo
 
-function spower(lambda, a)
-    # Initialize the result
-    result = one(lambda[1])
-
-    # Compute the product of lambda_i^a_i
-    for i in axes(lambda, 2)
-        result *= lambda[1, i]^a[i, 1]
-    end
-
-    return result
-end
-
-function spower_matrix(lambda, A)
-    r, n = size(A)
-    result = matrix(ZZ, [[one(lambda[1]) for i in 1:n]])
-
-    for i in 1:n
-        a = A[:, i]
-        result[i] = spower(lambda, a)
-    end
-
-    return result
-end
-
 function split_matrix_pos_and_neg(A)
     # Splits a matrix A into two parts A_pos and A_neg
     # where A_pos contains the positive entries of A and 0s elsewhere
@@ -45,11 +21,46 @@ function split_matrix_pos_and_neg(A)
     return A_pos, -A_neg
 end
 
-r, n = 2, 3
-A = matrix(ZZ, [[1, 2, 3], [4, 5, 6]])
+R, lambda = polynomial_ring(QQ, r, "lambda")
 
-lambda = matrix(ZZ, [[2, 3]])
+r, n = 3, 4
 
-spower_matrix(lambda, A)
+A = matrix(ZZ, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
 
-A_pos, A_neg = split_matrix_pos_and_neg(A)
+apowermatrix(lambda, A)
+
+function apower(lambda, a)
+    r, n = size(a)
+
+    result = one(lambda[1])
+    
+    for i in 1:r
+        result *= lambda[i]^a[i]
+    end
+
+    return result
+end
+
+function apowermatrix(lambda, A)
+    r, n = size(A)
+
+    result = [one(lambda[1]) for i in 1:n]
+
+    for i in 1:n
+        result[i] = lmaopower(lambda, A[:, i])
+    end
+
+    return result
+end
+
+apower(lambda, a)
+
+apowermatrix(lambda, A)
+
+n
+
+# a is a column vector of integers
+a = matrix(ZZ, [[1], [2], [3]])
+# lambda is a row vector with entries in K*
+lambda = matrix(ZZ, [[2, 3, 4]])
+spower(lambda, a)
