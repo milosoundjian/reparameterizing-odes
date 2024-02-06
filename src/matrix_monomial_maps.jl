@@ -21,45 +21,11 @@ function split_matrix_pos_and_neg(A)
     return A_pos, -A_neg
 end
 
-R, lambda = polynomial_ring(QQ, r, "lambda")
+r, n = 2, 3
+A = matrix(ZZ, [[1, 2, 3], [4, 5, 6]])
 
-r, n = 3, 4
+lambda = matrix(ZZ, [[2, 3]])
 
-A = matrix(ZZ, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+spower_matrix(lambda, A)
 
-apowermatrix(lambda, A)
-
-function apower(lambda, a)
-    r, n = size(a)
-
-    result = one(lambda[1])
-    
-    for i in 1:r
-        result *= lambda[i]^a[i]
-    end
-
-    return result
-end
-
-function apowermatrix(lambda, A)
-    r, n = size(A)
-
-    result = [one(lambda[1]) for i in 1:n]
-
-    for i in 1:n
-        result[i] = lmaopower(lambda, A[:, i])
-    end
-
-    return result
-end
-
-apower(lambda, a)
-
-apowermatrix(lambda, A)
-
-n
-
-# a is a column vector of integers
-a = matrix(ZZ, [[1], [2], [3]])
-# lambda is a row vector with entries in K*
-lambda = matrix(ZZ, [[2, 3, 4]])
+A_pos, A_neg = split_matrix_pos_and_neg(A)
