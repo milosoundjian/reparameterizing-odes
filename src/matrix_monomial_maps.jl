@@ -65,4 +65,10 @@ end
 
 A = matrix(ZZ, [[6, 0, -4, 1, 3], [0, 3, 1, -4, 3]])
 
-spower_neg_matrix(lambda, A)
+R, z = polynomial_ring(QQ, 5, "z")
+
+lambda_to_A = spower_neg_matrix(lambda, A)
+
+lambda_to_A
+
+lambda_to_A[1]
