@@ -194,6 +194,8 @@ In order to reduce ODEs through scaling we must define what a scaling is. A scal
 
 \section{Methodology}
 
+% TODO: This is work in progress
+
 In this section I will explain with an example the full methodology of the algorithm. The example I use is the the Schackenberg Model for a simple chemical reaction with limit cycle as shown in example 7.4 of \cite{Hubert2013}. The equation for this model is as follows.
 \begin{align*}
     \diff{x}{t}
@@ -207,22 +209,6 @@ I explain the process to  work on this from now on.
 \begin{enumerate}[label=Step \arabic*:]
     \item Form the function \(F\) with the Laurent polynomials of the differential equations.
 \end{enumerate}
-
-\newpage
-
-\section{Guidelines for your thesis report}
-
-\begin{itemize}
-    \item Structure your thesis using sections, subsections, paragraphs as you like. We advise you to not use chapters (the thesis is a ``short'' document, it should not be more than 30 pages). However, you are free to use them if you think that will improve your work (so, at your own risk).
-    \item Use bibtex to cite related work, e.g., \cite{DBLP:journals/x/Turing37}, adding your reference in the {main.bib} file and use the {$\backslash$cite} command.
-    \item Change the value of the commands {$\backslash$thesistitle}, {$\backslash$authorname}, {$\backslash$supervisor}, {$\backslash$supervisorinstitution}, \\ {$\backslash$abstracttext} to set up the content of the title page. These commands are beginning of the {main.tex} file.
-    \item The thesis should be \textbf{at most} 30 pages long. The official guideline is to have a thesis ``between 20 and 30 pages long''. However, these page limits are a \emph{guideline} and will not be enforced strictly.
-          The main advise is to shoot for quality and not or length: we prefer reading fewer pages containing high quality, well explained, work rather than 30 pages of messy content. Your grade is not a function of the number of pages!
-          Clearly, it's a red flag if your thesis length deviates a lot from the expected value of 20 pages (e.g., your thesis has 5 pages or it has 60 pages).
-    \item The appendix is \textbf{not included} in the page count, while the title page, abstract page, table of content page, and all the bibliography instead are included. Again, the page limit is not enforced strictly, so this information should not be extremely important.
-    \item Note: we will not evaluate your appendix that should not contain your thesis contribution but only provide additional details (e.g., some important code, additional tables or details for the experiments, \ldots).
-    \item You \textbf{cannot} change the tex template (e.g., font size, margin size, \ldots). We fix a template so all the students work under the same condition. Get in touch if you see some bug in the template or some possible improvement (we may, or not, improve the template with your suggestion).
-\end{itemize}
 
 \newpage
 \bibliographystyle{plain}
