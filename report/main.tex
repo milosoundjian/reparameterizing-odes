@@ -36,7 +36,7 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 % \usepackage{times}
 \usepackage{mathptmx}
 \usepackage[colorlinks, linkcolor=blue]{hyperref}
-\setlength {\marginparwidth }{2cm}
+\setlength {\marginparwidth}{2.0cm}
 \usepackage{pdfpages}
 \usepackage{fancyhdr} %% For changing headers and footers
 
@@ -47,6 +47,11 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 \usepackage[framemethod=tikz]{mdframed} % For better box in abstract
 \usepackage{esdiff} % For differentials
 \usepackage{enumitem} % For step by step methodology
+
+% Commands
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Zn}[1]{\mathbb{Z}^{#1}}
+\newcommand{\Zmn}[2]{\mathbb{Z}^{#1 \times #2}}
 
 %% \predate{}
 %% \postdate{}
@@ -154,13 +159,34 @@ The goal of this week was to get familiar with the algorithm I will be working o
 
 \section{Hermite Normal Forms and Hermite Multipliers}
 
+\subsection{Hermite Normal Forms}
+
+Hermite Normal Form can be thought of as the integer matrix equivalent of reduced row echelon form.
+
+It is important to note that for the purpose of this algorithm we need to consider two types of Hermite Normal Forms. By default Hermite Normal form
+
+\subsection{Hermite Multipliers}
+
+In order to go from a given matrix \(A\) to its corresponding unique Hermite Normal Form, a series of row/column operations are done. One can preserve these row operations in a separate matrix commonly called the Hermite Transform. For the purpose of this paper, and based on \cite{Hubert2013}, we will use the term Hermite Multiplier, which we give the same meaning. The result is that we have a matrix \(V\) such that
+\[A \cdot V = H.\]
+
+Or when we work with HNF column form,
+\[V \cdot A = H\]
+
 One of the forms that is used for the algorithm is Hermite Normal Forms and Hermite Multipliers.
 
 Hermite Multipliers, or also known as hermite transforms are...
 
 The Nemo library for Julia provides a function for calculating the HNF but it only works for the HNF row form and not the column form. Hence I created a function that using the algorithm for calculating the HNF row form can calculate the HNF column form. I also used the function that calculated the HNF with transform and it also worked for that. Allowing me to get the HNF transform for the column form as well. Also the initial algorithm did get the normal hermite normal form transform so I also implemented that.
 
-% TODO: Elaborate on the details of what HNF is and how I implemented the algorithms.
+\subsection{Algorithmically determining HNF and Hermite Multipliers}
+
+There has been work done in algorithmically determining HNFs and Hermite Multipliers
+
+\subsection{Practical Implementation}
+
+There exists open source libraries that implement the algorithms to calculate the HNF form of a given matrix. For the purpose of this algorithm I have chosen to use the impl
+
 
 \section{Scalings}
 
