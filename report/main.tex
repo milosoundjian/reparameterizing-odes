@@ -21,6 +21,7 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 % Added package
 \usepackage[utf8]{inputenc}
 
+% Template packages
 \usepackage[T1]{fontenc}
 \usepackage{amstext}
 \usepackage{amsmath}
@@ -39,7 +40,6 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 \setlength {\marginparwidth}{2.0cm}
 \usepackage{pdfpages}
 \usepackage{fancyhdr} %% For changing headers and footers
-
 \usepackage{titling}
 \usepackage[nottoc, numbib]{tocbibind}
 
@@ -49,63 +49,43 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 \usepackage{enumitem} % For step by step methodology
 
 % Commands
-\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Z}[0]{\mathbb{Z}}
 \newcommand{\Zn}[1]{\mathbb{Z}^{#1}}
 \newcommand{\Zmn}[2]{\mathbb{Z}^{#1 \times #2}}
 
-%% \predate{}
-%% \postdate{}
-%% \date{}
-%% \author{\authorname}
-
 \begin{document}
-
-%\title{\thesistitle}
-
-%\maketitle
-
-% Max 10 lines.
-%\noindent \paragraph*{Abstract}
-%\abstract
 
 \hspace{0pt}
 \vfill
 
 \begin{center}
-
     \includegraphics[width=0.3\textwidth]{logo-EP-vertical}
-
     \vspace*{2em}
-    %
+
     {\large
         \textbf{\'Ecole Polytechnique}
-
         \vspace*{1em}
+
         \textit{BACHELOR THESIS IN COMPUTER SCIENCE}
-
-
         \vspace*{3em}
+
         {\Huge \textbf{\thesistitle}}
         \vspace*{3em}
 
-
-
         \textit{Author:}
-
         \vspace*{1em}
+
         \authorname{}, \'Ecole Polytechnique
-
         \vspace*{2em}
-        %
-        {\textit{Advisor:}}
 
+        {\textit{Advisor:}}
         \vspace*{1em}
+
         \supervisor{}, \supervisorinstitution{}
     }
-
     \vspace*{2em}
-    \textit{Academic year 2023/2024}
 
+    \textit{Academic year 2023/2024}
 \end{center}
 
 \vfill
@@ -151,21 +131,23 @@ The main overarching goal of this thesis is to implement an algorithm using scal
 
 In order to do this, I implemented in Julia, the necessary functions, such as getting the HNF multipliers in both row and column form. Most of the references for this. These include the functions \cite{Hubert2013}
 
-Furthermore, I was (hopefully) able to integrate this algorithm that I had implemented into a more overarching Julia library `StructuralIdentifiability.jl`
+Furthermore, I was (hopefully) able to integrate this algorithm that I had implemented into a more overarching Julia library ``StructuralIdentifiability.jl''
 
-\subsection*{Notes from Week 1}
+% \subsection*{Notes from Week 1}
 
-The goal of this week was to get familiar with the algorithm I will be working on. To do this I read through the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
+% The goal of this week was to get familiar with the algorithm I will be working on. To do this I read through the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
 
-\section{Hermite Normal Forms and Hermite Multipliers}
+\section{Background}
 
-\subsection{Hermite Normal Forms}
+\subsection{Hermite Normal Forms and Hermite Multipliers}
+
+\subsubsection{Hermite Normal Forms}
 
 Hermite Normal Form can be thought of as the integer matrix equivalent of reduced row echelon form.
 
 It is important to note that for the purpose of this algorithm we need to consider two types of Hermite Normal Forms. By default Hermite Normal form
 
-\subsection{Hermite Multipliers}
+\subsubsection{Hermite Multipliers}
 
 In order to go from a given matrix \(A\) to its corresponding unique Hermite Normal Form, a series of row/column operations are done. One can preserve these row operations in a separate matrix commonly called the Hermite Transform. For the purpose of this paper, and based on \cite{Hubert2013}, we will use the term Hermite Multiplier, which we give the same meaning. The result is that we have a matrix \(V\) such that
 \[A \cdot V = H.\]
@@ -179,20 +161,20 @@ Hermite Multipliers, or also known as hermite transforms are...
 
 The Nemo library for Julia provides a function for calculating the HNF but it only works for the HNF row form and not the column form. Hence I created a function that using the algorithm for calculating the HNF row form can calculate the HNF column form. I also used the function that calculated the HNF with transform and it also worked for that. Allowing me to get the HNF transform for the column form as well. Also the initial algorithm did get the normal hermite normal form transform so I also implemented that.
 
-\subsection{Algorithmically determining HNF and Hermite Multipliers}
+\subsubsection{Algorithmically determining HNF and Hermite Multipliers}
 
 There has been work done in algorithmically determining HNFs and Hermite Multipliers
 
-\subsection{Practical Implementation}
+\subsubsection{Practical Implementation}
 
 There exists open source libraries that implement the algorithms to calculate the HNF form of a given matrix. For the purpose of this algorithm I have chosen to use the impl
 
 
-\section{Scalings}
+\subsection{Scalings}
 
 In order to reduce ODEs through scaling we must define what a scaling is. A scaling is...
 
-\section{Methodology}
+\section{Implementation}
 
 % TODO: This is work in progress
 
@@ -209,6 +191,10 @@ I explain the process to  work on this from now on.
 \begin{enumerate}[label=Step \arabic*:]
     \item Form the function \(F\) with the Laurent polynomials of the differential equations.
 \end{enumerate}
+
+\subsection{Example Implementation 1}
+
+\subsection{Example Implementation 2}
 
 \newpage
 \bibliographystyle{plain}
