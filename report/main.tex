@@ -142,6 +142,13 @@ In order to do this, I implemented in Julia, the necessary functions, such as ge
 
 Furthermore, I was (hopefully) able to integrate this algorithm that I had implemented into a more overarching Julia library ``StructuralIdentifiability.jl''
 
+{\color{purple}Gleb: some points to keep in mind
+\begin{enumerate}
+  \item mention relations to the Buckingham Pi theorem and dimension analysis
+\end{enumerate}
+
+}
+
 % \subsection*{Notes from Week 1}
 
 % The goal of this week was to get familiar with the algorithm I will be working on. To do this I read through the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
@@ -153,6 +160,8 @@ Furthermore, I was (hopefully) able to integrate this algorithm that I had imple
 \subsubsection{Hermite Normal Forms (HNFs)}
 
 While different sources may have varying definitions of Hermite Normal Forms, (explain the wikipedia def vs sisrds def here), the
+
+{\color{purple}Gleb: would be good to use the ``definition'' environment to explicitly separate the definitions}
 
 According to \cite[SISRDS]{Hubert2013}, an \(m \times n\) integer matrix \(H = [h_{i, j}]\) is said to be in \textit{column} Hermite Normal Form if there exists an integer \(r\) and a strictly increasing sequence \(i_1, \dots, i_r\) of pivot rows such that:
 \begin{enumerate}[label=(\roman*)]
@@ -168,6 +177,8 @@ The authors give a similar definition for the \textit{row} Hermite Normal Form b
     \item \(0 \le h_{k, j_i} < h_{i, j_i}\) when \(i < k\).
 \end{enumerate}
 
+{\color{purple}Gleb: a simple example here (again using the ``example'' environment) could be helpful}
+
 Note that in this definition has index (i) unchanged for both row and column hermite normal form, and this definition does not seem standard across all sources came across (example here is wikipedia).
 
 The reason that we care so much about the differences between is that our algorithm uses both forms in its different stages and we need to be very careful about which one we choose.
@@ -182,7 +193,7 @@ Any integer matrix \(A\) can be transformed via integer row operations (respecti
 
 There exists algorithms that can computer Hermite Normal Forms which can be found for example in \cite{cohen2013course}. The steps and complexity of this algorithm is discussed there as well. However, for the scope of this paper we will not discuss these algorithms in detail.
 
-Effectively, we will use these algorithms as a part of our algorithm. To do this we give this algorithm a specification. The function we care about is in the Julia library \texttt{Nemo.jl} and is called \texttt{hnf\_with\_transform}. The specification of this function is as follows:
+Effectively, we will use these algorithms as a part of our algorithm. To do this we give this algorithm a specification. The function we care about is in the Julia library \texttt{Nemo.jl} {\color{purple}Gleb: for correct way of citing Nemo, see \url{https://www.nemocas.org/authors/}}and is called \texttt{hnf\_with\_transform}. The specification of this function is as follows:
 \begin{figure}[H]
     \centering
     \includegraphics{images/diagram1.pdf}
