@@ -8,7 +8,7 @@
 \newcommand{\supervisorinstitution}[0]{LIX}
 
 \newcommand{\abstracttext}[0]{
-The goal of this paper is to elaborate an algorithm to simplify differential equations through scaling. The algorithm has been detailed in the paper ``Scaling Invariants and Symmetry Reduction of Dynamical Systems'' by Evelyne Hubert and George Labahn.
+    In this thesis, we present a novel implementation of the Hubert and Labahn algorithm for scaling invariants and symmetry reduction in dynamical systems, utilizing the Julia programming language. Our work extends the algorithm's application to non-identifiable models, offering a tool for the simplification and analysis of complex ordinary differential equation (ODE) models prevalent in the natural sciences. By integrating this implementation with the ``StructuralIdentifiability.jl'' package, we aim to make it easier for scientist to access this algorithm, enabling researchers without extensive computational backgrounds to leverage model simplification and reparameterization techniques. This approach not only facilitates the numerical solution of intricate models but also contributes to a deeper understanding of the underlying principles governing natural phenomena.
 }
 
 \usepackage[
@@ -47,11 +47,20 @@ The goal of this paper is to elaborate an algorithm to simplify differential equ
 \usepackage[framemethod=tikz]{mdframed} % For better box in abstract
 \usepackage{esdiff} % For differentials
 \usepackage{enumitem} % For step by step methodology
+\usepackage{float} % For putting images properly
 
 % Commands
 \newcommand{\Z}[0]{\mathbb{Z}}
 \newcommand{\Zn}[1]{\mathbb{Z}^{#1}}
 \newcommand{\Zmn}[2]{\mathbb{Z}^{#1 \times #2}}
+
+\newcommand{\todo}[1]{
+    \begin{mdframed}
+        \textcolor{orange}{
+        TODO: #1
+        }
+    \end{mdframed}
+}
 
 \begin{document}
 
@@ -141,38 +150,66 @@ Furthermore, I was (hopefully) able to integrate this algorithm that I had imple
 
 \subsection{Hermite Normal Forms and Hermite Multipliers}
 
-\subsubsection{Hermite Normal Forms}
+\subsubsection{Hermite Normal Forms (HNFs)}
 
-Hermite Normal Form can be thought of as the integer matrix equivalent of reduced row echelon form.
+While different sources may have varying definitions of Hermite Normal Forms, (explain the wikipedia def vs sisrds def here), the
 
-It is important to note that for the purpose of this algorithm we need to consider two types of Hermite Normal Forms. By default Hermite Normal form
+According to \cite[SISRDS]{Hubert2013}, an \(m \times n\) integer matrix \(H = [h_{i, j}]\) is said to be in \textit{column} Hermite Normal Form if there exists an integer \(r\) and a strictly increasing sequence \(i_1, \dots, i_r\) of pivot rows such that:
+\begin{enumerate}[label=(\roman*)]
+    \item The first \(r\) columns are non-zero;
+    \item \(h_{k, j} = 0\) for \(k > i_j\);
+    \item \(0 \le h_{i_j, k} < h_{i,j j}\) when \(j < k\).
+\end{enumerate}
+
+The authors give a similar definition for the \textit{row} Hermite Normal Form being defined as there existing an integer \(r\) and a strictly increasing sequence \(j_1, \dots, j_r\) such that:
+\begin{enumerate}[label=(\roman*)]
+    \item The first \(r\) columns are non-zero;
+    \item \(h_{i, k} = 0\) for \(k > j_i\);
+    \item \(0 \le h_{k, j_i} < h_{i, j_i}\) when \(i < k\).
+\end{enumerate}
+
+Note that in this definition has index (i) unchanged for both row and column hermite normal form, and this definition does not seem standard across all sources came across (example here is wikipedia).
+
+The reason that we care so much about the differences between is that our algorithm uses both forms in its different stages and we need to be very careful about which one we choose.
 
 \subsubsection{Hermite Multipliers}
 
-In order to go from a given matrix \(A\) to its corresponding unique Hermite Normal Form, a series of row/column operations are done. One can preserve these row operations in a separate matrix commonly called the Hermite Transform. For the purpose of this paper, and based on \cite{Hubert2013}, we will use the term Hermite Multiplier, which we give the same meaning. The result is that we have a matrix \(V\) such that
-\[A \cdot V = H.\]
+Any integer matrix \(A\) can be transformed via integer row operations (respectively column) to obtain a unique row (respectively column) Hermite Normal Form matrix H. We can encode these row operations (respectively column) into a unimodular integer matrix \(V\) such that we have \(V \cdot A = H\) (respectively \(A \cdot V = H\)). This matrix V is sometimes called the Hermite transform. In this paper we will be following \cite{Hubert2013} and calling in the \textit{Hermite Multiplier} of \(A\).
 
-Or when we work with HNF column form,
-\[V \cdot A = H\]
-
-One of the forms that is used for the algorithm is Hermite Normal Forms and Hermite Multipliers.
-
-Hermite Multipliers, or also known as hermite transforms are...
-
-The Nemo library for Julia provides a function for calculating the HNF but it only works for the HNF row form and not the column form. Hence I created a function that using the algorithm for calculating the HNF row form can calculate the HNF column form. I also used the function that calculated the HNF with transform and it also worked for that. Allowing me to get the HNF transform for the column form as well. Also the initial algorithm did get the normal hermite normal form transform so I also implemented that.
+\todo{Maybe add an example here}
 
 \subsubsection{Algorithmically determining HNF and Hermite Multipliers}
 
-There has been work done in algorithmically determining HNFs and Hermite Multipliers
+There exists algorithms that can computer Hermite Normal Forms which can be found for example in \cite{cohen2013course}. The steps and complexity of this algorithm is discussed there as well. However, for the scope of this paper we will not discuss these algorithms in detail.
+
+Effectively, we will use these algorithms as a part of our algorithm. To do this we give this algorithm a specification. The function we care about is in the Julia library \texttt{Nemo.jl} and is called \texttt{hnf\_with\_transform}. The specification of this function is as follows:
+\begin{figure}[H]
+    \centering
+    \includegraphics{images/diagram1.pdf}
+    \caption{Existing Algorithm Specifications}
+    \label{fig:existingalgo}
+\end{figure}
+\todo{Improve this figure to show that it is using row form}
+
+This means that in our algorithm, we already have a tool that allows us to calculate row Hermite Normal Form. What we need to do is to find a way to use this tool, for example by doing matrix operations on the input matrix \(A\) and on the result from using the function \texttt{hnf\_with\_transform} to be able to create a new function that taking input matrix \(A\), returns the column hermite normal form of \(A\). In the next section we will show how we are able to do this and prove our new method.
+
+The algorithm we implemented is as follows. It takes as input an \(m \times n\) integer matrix \(A\) and returns \(H, V\) where \(H\) is the Hermite Normal Form of \(A\) and \(V\) is the Hermite multiplier.
+\begin{enumerate}
+    \item Reverse the rows of \(A\).
+    \item Transpose \(A\).
+    \item Get the Hermite Normal Form of the new \(A\) and its transpose and its 
+\end{enumerate}
 
 \subsubsection{Practical Implementation}
 
 There exists open source libraries that implement the algorithms to calculate the HNF form of a given matrix. For the purpose of this algorithm I have chosen to use the impl
 
+\todo{Proof}
+
 
 \subsection{Scalings}
 
-In order to reduce ODEs through scaling we must define what a scaling is. A scaling is...
+A scaling is an operation on the differential equation that changes the
 
 \section{Implementation}
 
@@ -186,7 +223,7 @@ In this section I will explain with an example the full methodology of the algor
      & = b - h x^2 y
 \end{align*}
 
-I explain the process to  work on this from now on.
+I explain the process to work on this from now on.
 
 \begin{enumerate}[label=Step \arabic*:]
     \item Form the function \(F\) with the Laurent polynomials of the differential equations.
