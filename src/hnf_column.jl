@@ -15,6 +15,7 @@ Output:
 # make code more explanatory, here it should be A::ZZMatrix
 function hnf_column(A)
     (m, n) = size(A)
+    r = rank(A)
 
     # make a copy of A
     A1 = deepcopy(A)
@@ -31,12 +32,8 @@ function hnf_column(A)
 
     H = transpose(hnf(transpose(A1)))
 
-    # reverse the first m columns
-    if n > m
-        H[:, 1:m] = H[:, m:-1:1]
-    else
-        H[:, 1:n] = H[:, n:-1:1]
-    end
+    # reverse the first r columns
+    H[:, 1:r] = H[:, r:-1:1]
 
     # reverse the rows
     H = H[m:-1:1, :]
@@ -58,6 +55,7 @@ Output:
 """
 function hnf_with_transform_column(A)
     (m, n) = size(A)
+    r = rank(A)
 
     # make a copy of A
     A1 = deepcopy(A)
@@ -77,12 +75,8 @@ function hnf_with_transform_column(A)
 
     H = transpose(H)
 
-    # reverse the first m columns
-    if n > m
-        H[:, 1:m] = H[:, m:-1:1]
-    else
-        H[:, 1:n] = H[:, n:-1:1]
-    end
+    # reverse the first r columns
+    H[:, 1:r] = H[:, r:-1:1]
     
     # reverse the rows
     H = H[m:-1:1, :]
@@ -90,12 +84,8 @@ function hnf_with_transform_column(A)
     # transpose the transform
     V = transpose(V)
 
-    # reverse the first m columns
-    if n > m
-        V[:, 1:m] = V[:, m:-1:1]
-    else
-        V[:, 1:n] = V[:, n:-1:1]
-    end
+    # reverse the first r columns
+    V[:, 1:r] = V[:, r:-1:1]
 
     return H, V
 end

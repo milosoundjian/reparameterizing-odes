@@ -27,3 +27,17 @@ hnf(A)
 include("../src/hnf_column.jl")
 
 hnf_column(A)
+
+hnf_column(transpose(A))
+
+B = matrix(ZZ, [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [1, 2, 3, 4 ,5], [2, 4, 6, 8 ,10], [3, 6, 9, 12, 15]])
+
+hnf(B)
+
+hnf_column(B)
+
+C = matrix(ZZ, [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15], [4, 8, 12, 16, 20], [5, 10, 15, 20, 25]])
+
+hnf(C)
+
+hnf_column(C)
