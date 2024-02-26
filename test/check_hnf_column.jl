@@ -29,4 +29,5 @@ using Test
     @test H2 == H_true && A * V == H_true
 
     # TODO: Add test cases for tall matrices
+    # TODO: Add test cases for non full rank matrices
 end
