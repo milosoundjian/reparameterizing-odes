@@ -75,11 +75,11 @@ function hnf_with_transform_column(A)
 
     H = transpose(H)
 
-    # reverse the first r columns
-    H[:, 1:r] = H[:, r:-1:1]
-    
     # reverse the rows
     H = H[m:-1:1, :]
+    
+    # reverse the first r columns
+    H[:, 1:r] = H[:, r:-1:1]
 
     # transpose the transform
     V = transpose(V)
