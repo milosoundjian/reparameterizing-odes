@@ -63,6 +63,9 @@
     \end{mdframed}
 }
 
+\newtheorem{definition}{Definition}
+\newenvironment{example}[1][Example]{\textbf{#1.} }{\medskip}
+
 \begin{document}
 
 \hspace{0pt}
@@ -127,11 +130,9 @@
 
 \section{Introduction}
 
-Differential equations are a fundamental part of many natural sciences. The fields of Biology and Chemistry use differential models for many things. However, computationally, differential equations are not very easy to solve. In 2013, Evelyne Hubert and George Labahn hypothesized (and maybe implemented I'm not sure I couldn't find their code) an algorithm that would allow simplification of differential equations in order to make them easier to solve.
 
 In their paper ``Scaling Invariants and Symmetry Reductions of Dynamical Systems'' \cite{Hubert2013}, they discuss the theory behind the algorithm and how it can be implemented.
 
-The main overarching goal of this thesis is to implement an algorithm using scaling invariants and symmetry reduction of dynamical systems to improve the efficiency of solving ODEs computationally. What this means is that given an ODE, say for example the predator-prey model given by the following set of equations:
 \begin{align*}
     \diff{n}{t}
      & = n (r (1 - \frac{n}{K} - k \frac{p}{n + d})), \\
@@ -152,7 +153,6 @@ Furthermore, I was (hopefully) able to integrate this algorithm that I had imple
 
 % \subsection*{Notes from Week 1}
 
-% The goal of this week was to get familiar with the algorithm I will be working on. To do this I read through the main paper I will be working on (http://hal.inria.fr/hal-00668882). My first goal was to understand what Hermitian Normal Forms (HNFs) were. So I read up on them. HNFs fall into two categories, row and column, and this paper requires the use of both. The first issue I encountered was that the library I was using (specifically the Nemo Julia package) did not have an implementation for the column HNF. So I had to come up with my own implementation of it. While at first I looked at the algorithm (Cohen's algorithm from A Course in Computational Algebraic Number Theory), I realized that from the function could be implemented directly using the current `hnf` and `hnf\_with\_transform` function that already existed.
 
 \section{Background}
 
@@ -160,68 +160,116 @@ Furthermore, I was (hopefully) able to integrate this algorithm that I had imple
 
 \subsubsection{Hermite Normal Forms (HNFs)}
 
-While different sources may have varying definitions of Hermite Normal Forms, (explain the wikipedia def vs sisrds def here), the
+While different sources may have varying definitions of Hermite Normal Forms, the ones we will follow are from \cite{Hubert2013} as they are the ones used in the definition of the algorithm.
 
-    {\color{purple}Gleb: would be good to use the ``definition'' environment to explicitly separate the definitions}
+\begin{definition}[\textit{Column} Hermite Normal Form]
+    \begin{enumerate}[label=(\roman*)]
+        \item The first \(r\) columns are non-zero;
+        \item \(h_{k, j} = 0\) for \(k > i_j\);
+        \item \(0 \le h_{i_j, k} < h_{i_j, j}\) when \(j < k\).
+    \end{enumerate}
+\end{definition}
 
-According to \cite[SISRDS]{Hubert2013}, an \(m \times n\) integer matrix \(H = [h_{i, j}]\) is said to be in \textit{column} Hermite Normal Form if there exists an integer \(r\) and a strictly increasing sequence \(i_1, \dots, i_r\) of pivot rows such that:
-\begin{enumerate}[label=(\roman*)]
-    \item The first \(r\) columns are non-zero;
-    \item \(h_{k, j} = 0\) for \(k > i_j\);
-    \item \(0 \le h_{i_j, k} < h_{i_j, j}\) when \(j < k\).
-\end{enumerate}
+\begin{definition}[\textit{Row} Hermite Normal Form]
+    \begin{enumerate}[label=(\roman*)]
+        \item The first \(r\) rows are non-zero;
+        \item \(h_{i, k} = 0\) for \(k < j_i\);
+        \item \(0 \le h_{k, j_i} < h_{i, j_i}\) when \(i < k\).
+    \end{enumerate}
+\end{definition}
 
-The authors give a similar definition for the \textit{row} Hermite Normal Form being defined as there existing an integer \(r\) and a strictly increasing sequence \(j_1, \dots, j_r\) such that:
-\begin{enumerate}[label=(\roman*)]
-    \item The first \(r\) rows are non-zero; % This should be columns according to the paper
-    \item \(h_{i, k} = 0\) for \(k > j_i\);
-    \item \(0 \le h_{k, j_i} < h_{i, j_i}\) when \(i < k\).
-\end{enumerate}
+\begin{example}
+    Take for example the matrix
+    \[
+        \begin{pmatrix}
+            6 & 0 & -4 & 1  & 3 \\
+            4 & 3 & 1  & -4 & 3
+        \end{pmatrix}.
+    \]
 
-{\color{purple}Gleb: a simple example here (again using the ``example'' environment) could be helpful}
+    The \textit{row} Hermite Normal Form of this matrix is
+    \[
+        \begin{pmatrix}
+            2 & 6 & 6  & -9  & 3 \\
+            0 & 9 & 11 & -14 & 3
+        \end{pmatrix}.
+    \]
 
-Note that in this definition has index (i) unchanged for both row and column hermite normal form, and this definition does not seem standard across all sources came across (example here is wikipedia).
+    The \textit{column} Hermite Normal Form of this matrix is
+    \[
+        \begin{pmatrix}
+            1 & 0 & 0 & 0 & 0 \\
+            0 & 1 & 0 & 0 & 0
+        \end{pmatrix}.
+    \]
+\end{example}
 
-The reason that we care so much about the differences between is that our algorithm uses both forms in its different stages and we need to be very careful about which one we choose.
+While they may seem similar, it is important to be careful since both of these forms are used in the algorithm, thus in this paper we will try to always be specific about which Hermite Normal Form we are using.
 
 \subsubsection{Hermite Multipliers}
 
 Any integer matrix \(A\) can be transformed via integer row operations (respectively column) to obtain a unique row (respectively column) Hermite Normal Form matrix H. We can encode these row operations (respectively column) into a unimodular integer matrix \(V\) such that we have \(V \cdot A = H\) (respectively \(A \cdot V = H\)). This matrix V is sometimes called the Hermite transform. In this paper we will be following \cite{Hubert2013} and calling in the \textit{Hermite Multiplier} of \(A\).
 
-\todo{Maybe add an example here}
+\begin{example}
+    Again let us take the matrix
+    \[
+        A = \begin{pmatrix}
+            6 & 0 & -4 & 1  & 3 \\
+            4 & 3 & 1  & -4 & 3
+        \end{pmatrix}.
+    \]
+
+    Its \textit{column} Hermite Normal Form is:
+    \[
+        H = \begin{pmatrix}
+            1 & 0 & 0 & 0 & 0 \\
+            0 & 1 & 0 & 0 & 0
+        \end{pmatrix}.
+    \]
+
+    And a Hermite Multiplier is
+    \[
+        V = \begin{pmatrix}
+            16  & 4  & 6   & 33  & -60 \\
+            -28 & -7 & -11 & -58 & 105 \\
+            24  & 6  & 9   & 50  & -90 \\
+            1   & 0  & 0   & 2   & -3  \\
+            0   & 0  & 0   & 0   & 1
+        \end{pmatrix}.
+    \]
+
+    We can check that \(A \cdot V = H\).
+\end{example}
+
 
 \subsubsection{Algorithmically determining HNF and Hermite Multipliers}
 
 There exists algorithms that can computer Hermite Normal Forms which can be found for example in \cite{cohen2013course}. The steps and complexity of this algorithm is discussed there as well. However, for the scope of this paper we will not discuss these algorithms in detail.
 
 Effectively, we will use these algorithms as a part of our algorithm. To do this we give this algorithm a specification. The function we care about is in the Julia library \texttt{Nemo.jl} \cite{nemo} and is called \texttt{hnf\_with\_transform}. The specification of this function is as follows:
-\begin{figure}[H]
-    \centering
-    \includegraphics{images/diagram1.pdf}
-    \caption{Existing Algorithm Specifications}
-    \label{fig:existingalgo}
-\end{figure}
-\todo{Improve this figure to show that it is using row form, and change the U to V}
 
 This means that in our algorithm, we already have a tool that allows us to calculate row Hermite Normal Form. What we need to do is to find a way to use this tool, for example by doing matrix operations on the input matrix \(A\) and on the result from using the function \texttt{hnf\_with\_transform} to be able to create a new function that taking input matrix \(A\), returns the column hermite normal form of \(A\). In the next section we will show how we are able to do this and prove our new method.
 
-The algorithm we implemented is as follows. It takes as input an \(m \times n\) integer matrix \(A\) and returns \(H, V\) where \(H\) is the Hermite Normal Form of \(A\) and \(V\) is the Hermite Multiplier.
+% TODO: Typeset this as an algorithm (INPUT, OUTPUT)
+
 \begin{enumerate}
     \item We set \(m\) to be the number of rows of matrix \(A\) and \(r\) its rank.
     \item Reverse the rows of \(A\).
     \item Transpose \(A\).
-    \item We set \(H\) and \(V\) to be the `hnf\_with\_transform' of our new \(A\).
+    \item We set \(H\) and \(V\) to be the \texttt{hnf\_with\_transform} of our new \(A\).
     \item We transpose, reverse the rows then reverse the first \(r\) columns of our \(H\) matrix and the result is our column HNF of the input matrix \(A\).
     \item We transpose \(V\) and then reverse the first \(r\) columns. The result gives us the Hermite Multiplier of our input matrix \(A\).
 \end{enumerate}
 
-Let us now show why this algorithm works.
+How this algorithm works:
 
-To do this we will go step by step. We need to work carefully with the indices in the definitions of row and column Hermite Normal Forms.
+The \texttt{hnf\_with\_transform} function that the Nemo library provides us with works to get the \textit{row} Hermite Normal Form of our input matrix \(A\) by doing row operations. This is due to the property of the Hermite Normal Form being found through a series of row operations on the input matrix \(A\). Similarly, the \textit{column} Hermite Normal can be found through series of column operations, so transposing \(A\) applying the \texttt{hnf\_with\_transform} and then transposing the result will allow us to effectively be using column operations (Row operations on the transpose are like column operations on the original matrix).
 
-We start with an input matrix \(A\) which is an \(m \times n\) integer matrix of rank \(r\).
+There are a few more details to this algorithm that are elaborated on in the next section.
 
-We start by reversing the rows of \(A\). This is equivalent to multiplying \(A\) on the left by the \(m \times m\) matrix:
+\subsubsection{Explanation and Proof of Algorithm}
+
+We start with a matrix \(A \in \Zmn{m}{n}\) of rank \(r\). We start by reversing the rows of \(A\), which is equivalent to multiplying \(A\) on the left my the \(m \times m\) matrix. The reason we do this is that later on in the algorithm we will have to reverse the rows again in order to get the proper \textit{column} Hermite Normal Form layout for the result matrix, so we have to flip the rows once in advance to cancel out the effect.
 \[
     C_m = \begin{pmatrix}
         0      & \cdots  & 1      \\
@@ -229,61 +277,92 @@ We start by reversing the rows of \(A\). This is equivalent to multiplying \(A\)
         1      & \cdots  & 0
     \end{pmatrix}
 \]
-Aka an \(m \times m\) matrix with \(0\)s everywhere and \(1\) along the non-main diagonal.
-
-So now we have \(C_m A\). The next step is to take the transpose of this, giving us:
+So we get the result of \(C_m A\). We then take the transpose of this to get:
 \[
-    (C_m A)^\intercal = A^\intercal C_m^\intercal = A^\intercal C_m
+    (C_m A)^\intercal = A^\intercal C_m
 \]
-Since \(C_m\) is a symmetric matrix \(C_m^\intercal = C_m\).
 
-The next step is for us to apply the `hnf\_with\_transform' function to \(A^\intercal C_m\). By the specifications of this function we have that the resulting \(H\) and \(V\) from this function are such that:
+We then get the Hermite Normal Form and Hermite Multiplier of this, this is done through a series of row operations on the \(A^\intercal C_m\). We use the Nemo function \texttt{hnf\_with\_transform(A)} to do this which, gives us \(H\) the \textit{row} Hermite Normal Form of \(A\) and \(V\) a Hermite Multipler. Thus applying this to \(A^\intercal C_m\), we get \(H\) and \(V\) such that:
 \[
     V \cdot (A^\intercal C_m) = H
 \]
 
-Since rank does not change with invertible operations and with transposition, we have that rank(H) = rank(A). We also get that the matrix H follows the properties of it itself being in \textit{row} Hermite Normal Form. Meaning that, for a strictly increasing sequence \(i_1, \dots, i_r\):
-\begin{enumerate}[label=(\roman*)]
-    \item The first \(r\) rows are non-zero;
-    \item \(h_{i, k} = 0\) for \(k > j_i\);
-    \item \(0 \le h_{k, j_i} < h_{i, j_i}\) when \(i < k\).
-\end{enumerate}
+Furthermore, since \(H\) is in \textit{row} Hermite Normal Form, we have that it follows the definition, and thus as a matrix looks something like this:
+\[
+    H = \left(
+    \begin{array}{ccccc}
+            * & \cdot & | & |      & \cdot \\
+            0 & 0     & * & |      & \cdot \\
+            0 & 0     & 0 & *      & \cdot \\
+            0 & 0     & 0 & \cdots & 0     \\
+            0 & 0     & 0 & \cdots & 0
+        \end{array}
+    \right)
+\]
 
-Now when we take the transpose of this, we get the properties that:
-\begin{enumerate}[label=(\roman*)]
-    \item The first \(r\) columns are non-zero;
-    \item \(h_{k, i} = 0\) for \(k > j_i\);
-    \item \(0 \le h_{j_i, k} < h_{j_i, k}\) when \(i < k\). % I think there is some mistake here but I haven't found it
-\end{enumerate}
+Where non first \(r\) columns are \(0\), and the \(|\) symbols show values that are \(0 \le | \le *\).
 
-The issue is that the resulting matrix is lower triangular, whereas our definition of a \textit{column} Hermite Normal Form matrix is that it is upper triangular. Hence by flipping the rows and flipping the first \(r\) columns we are able to achieve this. Then as a result we have \(H\) to be the Hermite Normal Form of \(A\)
+Now we need to change \(H\) so that it is in \textit{column} Hermite Normal Form according to our definition and so that \(A \cdot V = H\).
 
-% --- Alternate Explanation ---
+To do this our next step is to take the transpose of \(H\). Taking this our new \(H^\intercal\) looks like this.
+\[
+    H^\intercal = \left(
+    \begin{array}{ccccc}
+            *     & 0     & 0     & 0      & 0      \\
+            \cdot & 0     & 0     & 0      & 0      \\
+            -     & *     & 0     & 0      & 0      \\
+            -     & -     & *     & \vdots & \vdots \\
+            \cdot & \cdot & \cdot & 0      & 0      \\
+        \end{array}
+    \right)
+\]
 
-\subsubsection{Alternate Explanation}
+We then bring flip the rows again giving us:
+\[
+    C_m H^\intercal = \left(
+    \begin{array}{ccccc}
+            \cdot & \cdot & \cdot & 0      & 0      \\
+            -     & -     & *     & 0      & 0      \\
+            -     & *     & 0     & 0      & 0      \\
+            \cdot & 0     & 0     & \vdots & \vdots \\
+            *     & 0     & 0     & 0      & 0      \\
+        \end{array}
+    \right)
+\]
 
-According to the wikipedia definition of row and column Hermite Normal Form, the way to get row and Hermite Normal Form are the same up to transpose so our algorithm to get column Hermite Normal Form would just end up being
+The final step is to flip the first \(r\) columns of the resulting \(C_m H^\intercal\) to get:
+\[
+    C_m H^\intercal C_r = \left(
+    \begin{array}{ccccc}
+            \cdot & \cdot & \cdot & 0      & 0      \\
+            *     & -     & -     & 0      & \vdots \\
+            0     & *     & -     & 0      & 0      \\
+            0     & 0     & \cdot & \vdots & \vdots \\
+            0     & 0     & *     & 0      & 0      \\
+        \end{array}
+    \right)
+\]
 
-\texttt{hnf\_column = transpose(hnf(transpose(A)))}
+This final result is in \textit{column} Hermite Normal Form according to our definition, so thus we have our desired result.
 
-However due to the definition given in \cite{Hubert2013} wanting the column Hermite Normal Form to be upper triangular instead of lower triangular, we need to swap the rows then swap the first \(r\) columns to achieve this.
+From the linear algebra perspective, what we did holds up. From what we had earlier:
+\begin{align*}
+    V \cdot (A^\intercal C_m)             & = H                   \\
+    (V \cdot (A^\intercal) C_m)^\intercal & = H^\intercal         \\
+    C_m A \cdot V^\intercal               & = H^\intercal         \\
+    A \cdot V^\intercal C_r               & = C_m H^\intercal C_r \\
+\end{align*}
 
-\subsubsection{Practical Implementation}
+We note that in our algorithm applied transpose and multiplication on the right by \(C_r\) so our resulting \(V\) is \(V^\intercal C_r\) from the original \(V\) we had from our \texttt{hnf\_with\_transform(A)} function.
 
-There exists open source libraries that implement the algorithms to calculate the HNF form of a given matrix. For the purpose of this algorithm I have chosen to use the implent I am using the function `hnf\_with\_transform' from the Julia Nemo library, which itself is a wrapper of the C function of the same name in the FLINT library.
+It is very clear to see how it uses the steps of our algorithm to get the \textit{column} Hermite Normal Form.
 
-\todo{Proof}
+\section{Algorithm}
 
-
-\subsection{Scalings}
-
-A scaling is an operation on the differential equation that changes the
+Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be putting together the code to make this algorithm.
 
 \section{Implementation}
 
-% TODO: This is work in progress
-
-In this section I will explain with an example the full methodology of the algorithm. The example I use is the the Schackenberg Model for a simple chemical reaction with limit cycle as shown in example 7.4 of \cite{Hubert2013}. The equation for this model is as follows.
 \begin{align*}
     \diff{x}{t}
      & = a - kx + hx^2y \\

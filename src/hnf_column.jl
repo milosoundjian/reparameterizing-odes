@@ -20,23 +20,16 @@ function hnf_column(A)
     # make a copy of A
     A1 = deepcopy(A)
 
-    # reverse the first m columns
-    # if n > m
-    #     A1[:, 1:m] = A1[:, m:-1:1]
-    # else
-    #     A1[:, 1:n] = A1[:, n:-1:1]
-    # end
-
     # reverse the rows
     A1 = A1[m:-1:1, :]
 
     H = transpose(hnf(transpose(A1)))
 
-    # reverse the first r columns
-    H[:, 1:r] = H[:, r:-1:1]
-
     # reverse the rows
     H = H[m:-1:1, :]
+    
+    # reverse the first r columns
+    H[:, 1:r] = H[:, r:-1:1]
 
     return H
 end
@@ -59,14 +52,6 @@ function hnf_with_transform_column(A)
 
     # make a copy of A
     A1 = deepcopy(A)
-    # A1 = A
-
-    # reverse the first m columns
-    # if n > m
-    #     A1[:, 1:m] = A1[:, m:-1:1]
-    # else
-    #     A1[:, 1:n] = A1[:, n:-1:1]
-    # end
 
     # reverse the rows
     A1 = A1[m:-1:1, :]
@@ -77,7 +62,7 @@ function hnf_with_transform_column(A)
 
     # reverse the rows
     H = H[m:-1:1, :]
-    
+
     # reverse the first r columns
     H[:, 1:r] = H[:, r:-1:1]
 

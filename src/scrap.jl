@@ -6,7 +6,7 @@ using Nemo
 # Let us get the Laurent Polynomial
 R, (r, k, t, n) = polynomial_ring(QQ, ["r", "k", "t", "n"])
 
-F = [r * t - r * (1//k) * t * n]
+F = [r * t - r * (1 // k) * t * n]
 F = [t * r * (1 - n // k)]
 
 S, (t1, n1) = laurent_polynomial_ring(QQ, ["t1", "n1"])
@@ -30,9 +30,11 @@ hnf_column(A)
 
 hnf_column(transpose(A))
 
-B = matrix(ZZ, [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [1, 2, 3, 4 ,5], [2, 4, 6, 8 ,10], [3, 6, 9, 12, 15]])
+B = matrix(ZZ, [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15]])
 
 hnf(B)
+
+hnf_column(B)
 
 hnf(C)
 
@@ -76,3 +78,20 @@ function fake_hnf_column(A)
 
     return H
 end
+
+A = matrix(ZZ, [[6, 0, -4, 1, 3], [0, 3, 1, -4, 3]])
+H_true = matrix(ZZ, [[3, 2, 0, 0, 0], [0, 1, 0, 0, 0]])
+H1 = hnf_column(A)
+H2, V = hnf_with_transform_column(A)
+V
+A * V
+
+include("hnf_column.jl")
+
+A = matrix(ZZ, [[6, 0, -4, 1, 3], [4, 3, 1, -4, 3]])
+
+hnf(A)
+
+hnf_column(A)
+
+hnf_with_transform_column(A)[2]
