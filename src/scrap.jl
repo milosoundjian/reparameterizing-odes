@@ -34,10 +34,45 @@ B = matrix(ZZ, [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [1, 2, 3, 4 ,5], [2, 4, 6, 8 ,
 
 hnf(B)
 
-hnf_column(B)
-
-C = matrix(ZZ, [[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15], [4, 8, 12, 16, 20], [5, 10, 15, 20, 25]])
-
 hnf(C)
 
 hnf_column(C)
++
+
+C = matrix(ZZ, [[1, 2, 3, 4, 0], [2, 4, 6, 8, 0], [3, 6, 9, 12, 0], [4, 8, 12, 16, 0], [0, 0, 0, 0, 0]])
+
+H, V = hnf_with_transform_column(C)
+
+A = matrix(ZZ, [[1, 2, 3], [4, 5, 6], [5, 7, 9]])
+
+function create_random_integer_matrix(m, n)
+    return matrix(ZZ, rand(1:100, m, n))
+end
+
+function fake_hnf_column(A)
+    (m, n) = size(A)
+    r = rank(A)
+
+    # make a copy of A
+    A1 = deepcopy(A)
+
+    # reverse the first m columns
+    # if n > m
+    #     A1[:, 1:m] = A1[:, m:-1:1]
+    # else
+    #     A1[:, 1:n] = A1[:, n:-1:1]
+    # end
+
+    # reverse the rows
+    # A1 = A1[m:-1:1, :]
+
+    H = transpose(hnf(transpose(A1)))
+
+    # reverse the first r columns
+    # H[:, 1:r] = H[:, r:-1:1]
+
+    # reverse the rows
+    # H = H[m:-1:1, :]
+
+    return H
+end
