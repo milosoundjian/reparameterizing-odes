@@ -49,6 +49,7 @@
 \usepackage{enumitem} % For step by step methodology
 \usepackage{float} % For putting images properly
 \usepackage{mathdots} % For having \iddots
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e} % For algorithms
 
 % Commands
 \newcommand{\Z}[0]{\mathbb{Z}}
@@ -250,18 +251,23 @@ Effectively, we will use these algorithms as a part of our algorithm. To do this
 
 This means that in our algorithm, we already have a tool that allows us to calculate row Hermite Normal Form. What we need to do is to find a way to use this tool, for example by doing matrix operations on the input matrix \(A\) and on the result from using the function \texttt{hnf\_with\_transform} to be able to create a new function that taking input matrix \(A\), returns the column hermite normal form of \(A\). In the next section we will show how we are able to do this and prove our new method.
 
-% TODO: Typeset this as an algorithm (INPUT, OUTPUT)
+\begin{algorithm}[H]
+    \caption{hnf\_with\_transform\_column}
 
-\begin{enumerate}
-    \item We set \(m\) to be the number of rows of matrix \(A\) and \(r\) its rank.
-    \item Reverse the rows of \(A\).
-    \item Transpose \(A\).
-    \item We set \(H\) and \(V\) to be the \texttt{hnf\_with\_transform} of our new \(A\).
-    \item We transpose, reverse the rows then reverse the first \(r\) columns of our \(H\) matrix and the result is our column HNF of the input matrix \(A\).
-    \item We transpose \(V\) and then reverse the first \(r\) columns. The result gives us the Hermite Multiplier of our input matrix \(A\).
-\end{enumerate}
+    \begin{description}
+        \item[Input] Integer matrix \(A\)
+        \item[Output] HNF matrix \(H\) and Hermite Multiplier \(V\)
+    \end{description}
 
-How this algorithm works:
+    \begin{enumerate}[label = \textbf{(Step~\arabic*)}, leftmargin=*, align=left, labelsep=2pt, itemsep=0pt]
+        \item Set \(m\) the number of rows of matrix \(A\) and \(r\) its rank.
+        \item Reverse the rows of \(A\) then transpose \(A\).
+        \item Set \(H\) and \(V\) to be the \textit{row} HNF and corresponding multiplier of \(A\).
+        \item Transpose \(H\), then reverse the rows of \(H\), then reverse the first \(r\) columns of \(H\).
+        \item Transpose \(V\), then reverse the rows of \(V\).
+        \item Return \(H\) our \textit{column} Hermite Normal Form of the input \(A\) and \(V\) the corresponding Hermite Multiplier.
+    \end{enumerate}
+\end{algorithm}
 
 The \texttt{hnf\_with\_transform} function that the Nemo library provides us with works to get the \textit{row} Hermite Normal Form of our input matrix \(A\) by doing row operations. This is due to the property of the Hermite Normal Form being found through a series of row operations on the input matrix \(A\). Similarly, the \textit{column} Hermite Normal can be found through series of column operations, so transposing \(A\) applying the \texttt{hnf\_with\_transform} and then transposing the result will allow us to effectively be using column operations (Row operations on the transpose are like column operations on the original matrix).
 
@@ -300,7 +306,7 @@ Furthermore, since \(H\) is in \textit{row} Hermite Normal Form, we have that it
     \right)
 \]
 
-Where non first \(r\) columns are \(0\), and the \(|\) symbols show values that are \(0 \le | \le *\).
+Where non first \(r\) columns are \(0\), and the \(|\) symbols show values that are \(0 \le | \le *\) To follow conditions (ii) and (iii).
 
 Now we need to change \(H\) so that it is in \textit{column} Hermite Normal Form according to our definition and so that \(A \cdot V = H\).
 
