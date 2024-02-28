@@ -288,7 +288,7 @@ So we get the result of \(C_m A\). We then take the transpose of this to get:
     (C_m A)^\intercal = A^\intercal C_m
 \]
 
-We then get the Hermite Normal Form and Hermite Multiplier of this, this is done through a series of row operations on the \(A^\intercal C_m\). We use the Nemo function \texttt{hnf\_with\_transform(A)} to do this which, gives us \(H\) the \textit{row} Hermite Normal Form of \(A\) and \(V\) a Hermite Multipler. Thus applying this to \(A^\intercal C_m\), we get \(H\) and \(V\) such that:
+We then get the Hermite Normal Form and Hermite Multiplier of this, this is done through a series of row operations on the \(A^\intercal C_m\). We use the Nemo function \texttt{hnf\_with\_transform(A)} to do this which, gives us \(H\) the \textit{row} Hermite Normal Form of \(A\) and \(V\) a Hermite Multiplier. Thus applying this to \(A^\intercal C_m\), we get \(H\) and \(V\) such that:
 \[
     V \cdot (A^\intercal C_m) = H
 \]
@@ -383,6 +383,30 @@ I explain the process to work on this from now on.
 \end{enumerate}
 
 \subsection{Example Implementation 1}
+
+Let us say that we are working with the Verhulst Model of Logistic growth, defined by the differential equation given by:
+\[
+    \diff{n}{t} = rn \left( 1 - \frac{n}{k} \right).
+\]
+
+We start by obtaining the Luarent Polynomial from this equation. By multiplying the right side by \(t\) and \(\frac{1}{n}\) we get that the Laurent Polynomial of this equation is:
+\[
+    r t - r k^{-1} n.
+\]
+
+Encoding this as a matrix, with the rows corresponding to the variables in the order \(r, k, t, n\), we get that our matrix
+\[
+    K = \begin{bmatrix}
+        1 & 1  \\
+        0 & -1 \\
+        1 & 0  \\
+        0 & 1
+    \end{bmatrix}
+\]
+
+Using Proposition 5.1 from \cite{Hubert2013} we can use this matrix to determine the matrix for the scaling symmetries of our system. We recall that this means we start by finding the \textit{row} Hermite Normal Form of \(K\) and a corresponding Hermite Multiplier.
+
+To do this we use the \texttt{hnf\_with\_transform} from Nemo \cite{nemo}, which gives us
 
 \subsection{Example Implementation 2}
 
