@@ -179,6 +179,8 @@ While different sources may have varying definitions of Hermite Normal Forms, th
     \end{enumerate}
 \end{definition}
 
+% TODO: Fix the formatting for the definitions.
+
 \begin{example}
     Take for example the matrix
     \[
@@ -367,11 +369,13 @@ It is very clear to see how it uses the steps of our algorithm to get the \texti
 
 As explained earlier, the Hermite Normal Form of an integer matrix is unique, however the Hermite Multiplier itself is not, thus for any matrix
 
-% TODO: Explain the algorithm for Normal Hermite Multiplier
+% TODO: Explain the algorithm for Normal Hermite Multiplier.
 
 \section{Algorithm}
 
-Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be putting together the code to make this algorithm.
+Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be going over step by step each individual part of the algorithm all together to demonstrate how it is implemented in \texttt{reparametrizing-odes}.
+
+% TODO: Complete this section.
 
 \section{Implementation}
 
@@ -459,7 +463,11 @@ The final step here is to get the \textit{column} Hermite Normal Form of \(A\), 
     \end{bmatrix}
 \]
 
+% TODO: Understand and explain the last steps in the algorithm.
+
 \subsection{Example Implementation 2}
+
+% TODO: Do another implementation.
 
 \newpage
 \bibliographystyle{plain}
