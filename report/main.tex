@@ -363,6 +363,12 @@ We note that in our algorithm applied transpose and multiplication on the right 
 
 It is very clear to see how it uses the steps of our algorithm to get the \textit{column} Hermite Normal Form.
 
+\subsubsection{Normal Hermite Multiplier}
+
+As explained earlier, the Hermite Normal Form of an integer matrix is unique, however the Hermite Multiplier itself is not, thus for any matrix
+
+% TODO: Explain the algorithm for Normal Hermite Multiplier
+
 \section{Algorithm}
 
 Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be putting together the code to make this algorithm.
@@ -406,7 +412,52 @@ Encoding this as a matrix, with the rows corresponding to the variables in the o
 
 Using Proposition 5.1 from \cite{Hubert2013} we can use this matrix to determine the matrix for the scaling symmetries of our system. We recall that this means we start by finding the \textit{row} Hermite Normal Form of \(K\) and a corresponding Hermite Multiplier.
 
-To do this we use the \texttt{hnf\_with\_transform} from Nemo \cite{nemo}, which gives us
+To do this we use the \texttt{hnf\_with\_transform} from Nemo \cite{nemo}, which gives us the resulting \textit{row} Hermite Normal Form of \(K\):
+\[
+    H = \begin{bmatrix}
+        1 & 0 \\
+        0 & 1 \\
+        0 & 0 \\
+        0 & 0
+    \end{bmatrix}
+\]
+
+And a corresponding Hermite Multiplier:
+\[
+    U = \begin{bmatrix}
+        1  & 1  & 0 & 0 \\
+        0  & -1 & 0 & 0 \\
+        -1 & 0  & 1 & 0 \\
+        0  & 1  & 0 & 1
+    \end{bmatrix}
+\]
+
+Proposition 5.1 tells us that we look at the number of zero rows of \(H\), which we call \(r\), then taking the last \(r\) rows of \(U\) gives us the matrix \(A\) which gives us a matrix that describes the scaling symmetries of the system.
+\[
+    A = \begin{bmatrix}
+        -1 & 0 & 1 & 0 \\
+        0  & 1 & 0 & 1
+    \end{bmatrix}
+\]
+
+% TODO: Describe in full detail how the scaling symmetries are described here.
+
+The final step here is to get the \textit{column} Hermite Normal Form of \(A\), which is used to determine the new system. Using the new \texttt{hnf\_with\_normal\_transform\_column} function that we implemented earlier, we can find that our Normal Hermite Multiplier and its inverse are:
+\[
+    V = \begin{bmatrix}
+        -1 & 0 & 1 & 0  \\
+        0  & 1 & 0 & -1 \\
+        0  & 0 & 1 & 0  \\
+        0  & 0 & 0 & 1
+    \end{bmatrix}
+    \quad \text{and} \quad
+    W = \begin{bmatrix}
+        -1 & 0 & 1 & 0 \\
+        0  & 1 & 0 & 1 \\
+        0  & 0 & 1 & 0 \\
+        0  & 0 & 0 & 1
+    \end{bmatrix}
+\]
 
 \subsection{Example Implementation 2}
 
