@@ -45,6 +45,7 @@ function parse_equation(eq)
 
     # If the equation is not fractional, turn it into a fractional equation
     if isa(eq, QQMPolyRingElem)
+        # Gleb: does this work? I would rather expect something like `one(parent(eq))`
         eq = eq // one(QQ)
     end
 
@@ -69,6 +70,7 @@ function handle_parsed_equation(num_den, index)
     row_to_zero = den[1, :]
 
     # If the first row of the denominator is 0 then we can skip this step
+    # Gleb: would `iszero` function work here ?
     if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
         # We subract row_to_zero from all the rows in the numerator
         n_num = size(num, 1)
