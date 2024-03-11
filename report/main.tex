@@ -50,6 +50,7 @@
 \usepackage{float} % For putting images properly
 \usepackage{mathdots} % For having \iddots
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e} % For algorithms
+\usepackage{listings}
 
 % Commands
 \newcommand{\Z}[0]{\mathbb{Z}}
@@ -379,18 +380,78 @@ Now that we have a way to calculate the \textit{column} Hermite Normal Form, we 
 
 \section{Implementation}
 
+\subsection{Transformation of ODEs into Matrix Form}
+
+The initial phase in the reparameterization of ordinary differential equations (ODEs) pivots on the foundational step of converting our system of ODEs into a structured format amenable to manipulation and analysis. This process begins by reformatting the system into a matrix representation, which facilitates the application of algebraic and computational techniques for further examination and transformation.
+
+In the context of our implementation, we leverage the `StructuralIdentifiability' \cite{structidjl} package in Julia, a tool for symbolic computation, made for for analyzing the identifiability of parameters within systems described by ODEs. This package offers a structured approach to defining ODEs, incorporating essential elements such as variables \texttt{x\_vars}, parameters, and the independent variable \texttt{t}. This structured definition not only standardizes the representation of differential equations but also simplifies the extraction and manipulation of their components.
+
+The transformation process is as follows:
+
+\begin{enumerate}
+    \item \textbf{Definition of the ODE System:} Utilizing the \texttt{@ODEmodel} macro provided by the `StructuralIdentifiability' package, we can easily define in Julia a system of ODEs. We can access the equations of this ODE through the \texttt{x\_equations} field and the parameters through the \texttt{x\_vars} and \texttt{parameters}.
+
+    \item \textbf{Extraction and Parsing of Equations:} With the system defined, the next step involves extracting each equation and parsing them to isolate the numerator and denominator. This step is crucial for handling fractional equations, which are common in biological and physical systems modeling. The parsing process ensures that each equation is represented in a fractional form (including non-fractional ones by treating the denominator as just 1), facilitating uniform treatment in later stages. We then use a custom function \texttt{vector\_to\_matrix} in order to get the result in the Nemo integer matrices that are easier to work with than the lists of vectors that we get from the equation.
+
+    \item \textbf{Normalizing} We need to normalize the matrix so to do this we
+
+    \item \textbf{Padding of Matrix} Due to the independent variable \texttt{t} not being extracted, we need to account for it by adding a new column at the end of our resulting matrix.
+
+    \item \textbf{Concatenation} We combine the resulting matrices into one matrix that is our resulting matrix.
+\end{enumerate}
+
+We can illustrate this process with this example.
+
+Let us start with the Predator Prey Model:
 \begin{align*}
-    \diff{x}{t}
-     & = a - kx + hx^2y \\
-    \diff{y}{t}
-     & = b - h x^2 y
+    \diff{n}{t}
+     & = n (r (1 - \frac{n}{K} - k \frac{p}{n + d})), \\
+    \diff{p}{t}
+     & = sp (1 - h \frac{p}{n})
 \end{align*}
 
-I explain the process to work on this from now on.
+In our `Structuralidentifiability' \texttt{@ODEmodel} struct, we will be interested in three fields. \texttt{x\_vars}, \texttt{parameters} and \texttt{x\_equations}. In this example \texttt{x\_vars} is the vector containing \texttt{n(t)} and \texttt{p(t)}, \texttt{parameters} is the vector containing \texttt{K, d, h, k, r, s}, \texttt{x\_equations} is a dictionary mapping \texttt{x\_vars} to the corresponding equation for it in the ODE.
 
-\begin{enumerate}[label=Step \arabic*:]
-    \item Form the function \(F\) with the Laurent polynomials of the differential equations.
-\end{enumerate}
+With that in mind we start by extracting a list of the equations. In this example giving us a list like this:
+\begin{lstlisting}
+2-element Vector{AbstractAlgebra.Generic.FracFieldElem{QQMPolyRingElem}}:
+(-n(t)^3*r + n(t)^2*K*r - n(t)^2*d*r - n(t)*p(t)*K*k + n(t)*K*d*r)//(n(t)*K + K*d)
+(n(t)*p(t)*s - p(t)^2*h*s)//n(t)
+\end{lstlisting}
+
+The comes the `parsing' process, where we turn the equations into tuples of numerator and denominator matrices. We handle non fractional equations by turning them into fractional equations by setting the denominator to 1. We then concert the result into Nemo ZZMatrices that will be easier to work with. At this stage we are left with a series of matrices. In our example we get
+\begin{lstlisting}
+2-element Vector{Tuple{ZZMatrix, ZZMatrix}}:
+([3 0 0 0 0 0 1 0; 2 0 1 0 0 0 1 0; 2 0 0 1 0 0 1 0;
+1 1 1 0 0 1 0 0; 1 0 1 1 0 0 1 0], [1 0 1 0 0 0 0 0; 0 0 1 1 0 0 0 0])
+([1 1 0 0 0 0 0 1; 0 2 0 0 1 0 0 1], [1 0 0 0 0 0 0 0])
+\end{lstlisting}
+% TODO: Maybe convert this into full matrix form
+
+The order of the variables here is the \texttt{x\_vars} field elements followed by \texttt{parameters} field elements.
+
+We then have to take into account the \(\diff{(x)}{t}\) for all the \texttt{x\_vars} and add the independent variable \texttt{t} to our resulting matrix so we have a function that takes the `parsed' equations and returns the new resulting equations. It also takes care of normalizing the denominator to follow the specifications of the algorithm in \cite{Hubert2013}.
+
+% TODO: Add more info on this step
+
+Finally, with the output being a few separate matrices, the last step is to concatenate them together to achieve our desired final result matrix.
+
+Following this from the predator prey model we get:
+\[
+    \begin{pmatrix}
+        1  & 0 & 0  & -1 & -1 & -1 & 0 & -1 \\
+        0  & 0 & 0  & 1  & 0  & 0  & 0 & 1  \\
+        -1 & 0 & -1 & 0  & 0  & 0  & 0 & 0  \\
+        0  & 0 & 1  & 0  & 1  & 1  & 0 & 0  \\
+        0  & 0 & 0  & 0  & 0  & 0  & 0 & 1  \\
+        0  & 0 & 0  & 1  & 0  & 0  & 0 & 0  \\
+        1  & 1 & 1  & 0  & 1  & 0  & 0 & 0  \\
+        0  & 0 & 0  & 0  & 0  & 0  & 1 & 1  \\
+        1  & 1 & 1  & 1  & 1  & 0  & 1 & 1
+    \end{pmatrix}
+\]
+
+Which is the matrix we need to move on to the next part of the algorithm.
 
 \subsection{Example Implementation 1}
 
