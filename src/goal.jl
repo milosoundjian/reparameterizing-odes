@@ -45,8 +45,7 @@ function parse_equation(eq)
 
     # If the equation is not fractional, turn it into a fractional equation
     if isa(eq, QQMPolyRingElem)
-        # Gleb: does this work? I would rather expect something like `one(parent(eq))`
-        eq = eq // one(QQ)
+        eq = eq // one(parent(eq))
     end
 
     # Extract the numerator and denominator
@@ -71,7 +70,8 @@ function handle_parsed_equation(num_den, index)
 
     # If the first row of the denominator is 0 then we can skip this step
     # Gleb: would `iszero` function work here ?
-    if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
+    if !iszero(row_to_zero)
+    # if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
         # We subract row_to_zero from all the rows in the numerator
         n_num = size(num, 1)
         for i in 1:n_num
@@ -119,6 +119,8 @@ function ode_to_matrix(ode)
 
     return transpose(res)
 end
+
+ode_to_matrix(ode)
 
 # --------- FOR LATER ------------------
 
