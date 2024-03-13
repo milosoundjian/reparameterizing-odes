@@ -1,4 +1,13 @@
 include("../src/hnf_column_normal.jl")
+include("../src/ode_to_matrix.jl")
+
+ode = @ODEmodel(
+    x'(t) = a - k * x(t) + h * x(t)^2 * y,
+    y'(t) = b - h * x(t)^2 * y,
+    o(t) = x(t)
+)
+
+ode_to_matrix(ode)
 
 K = matrix(ZZ, [
     [0, 1, 0, 0, 0],
