@@ -7,6 +7,10 @@ using Nemo
 #     y'(t) = -c * x + d * x * y,
 # )
 
+ode_verhulst = @ODEmodel(
+    n'(t) = r * n * (1 - n / k),
+)
+
 # ode = @ODEmodel(
 #     x'(t) = a - k * x + h * x^2 * y + 1 / (x + y),
 #     y'(t) = b - h * x^2 * y,
