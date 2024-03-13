@@ -37,12 +37,17 @@ ode = @ODEmodel(
     o(t) = n * p # The observation
 )
 
+ode = @ODEmodel(
+    n'(t) = r * n * (1 - n / k),
+    o(t) = n(t)
+)
+
 # We then extract the equations from the ODE
 x_equations = [ode.x_equations[x] for x in ode.x_vars]
 y_equations = [ode.y_equations[y] for y in ode.y_vars]
 
 # We will need to iterate over each equation
-function parse_equation(eq, n_outputs = 0)
+function parse_equation(eq, ode)
 
     # If the equation is not fractional, turn it into a fractional equation
     if isa(eq, QQMPolyRingElem)
@@ -58,18 +63,20 @@ function parse_equation(eq, n_outputs = 0)
     M_den = vector_to_matrix(den)
 
     # Remove the columns for the outputs
+    n_x_vars = length(ode.x_vars)
+    n_outputs = length(ode.y_vars)
     if n_outputs != 0
-        M_num = M_num[:, 1:end-n_outputs]
-        M_den = M_den[:, 1:end-n_outputs]
+        # Remove the n_x_vars + 1 to n_x_vars + n_outputs columns from the numerator and denominator
+        # keeping the columns after that
+        M_num = hcat(M_num[:, 1:n_x_vars], M_num[:, n_x_vars + n_outputs + 1:end])
+        M_den = hcat(M_den[:, 1:n_x_vars], M_den[:, n_x_vars + n_outputs + 1:end])
     end
 
-    # Push the result to the result array
     return (M_num, M_den)
 end
 
-n_outputs = length(ode.y_vars)
-parsed_x_equations = [parse_equation(eq, n_outputs) for eq in x_equations]
-parsed_y_equations = [parse_equation(eq, n_outputs) for eq in y_equations]
+parsed_x_equations = [parse_equation(eq, ode) for eq in x_equations]
+parsed_y_equations = [parse_equation(eq, ode) for eq in y_equations]
 
 function handle_parsed_equation(num_den, index)
     num, den = deepcopy(num_den)
@@ -79,7 +86,7 @@ function handle_parsed_equation(num_den, index)
 
     # If the first row of the denominator is 0 then we can skip this step
     if !iszero(row_to_zero)
-    # if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
+        # if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
         # We subract row_to_zero from all the rows in the numerator
         n_num = size(num, 1)
         for i in 1:n_num
@@ -117,7 +124,7 @@ function handle_parsed_equation(num_den, index)
 
         # Concatenate the numerator and denominator (except the first row of the denominator which is 0 and we don't need it) 
         num_den = vcat(num, den[2:end, :])
-    end    
+    end
 
     return num_den
 end
@@ -128,9 +135,8 @@ handled_y_equations = [handle_parsed_equation(parsed_y_equations[i], -1) for i i
 function ode_to_matrix(ode)
     x_equations = [ode.x_equations[x] for x in ode.x_vars]
     y_equations = [ode.y_equations[y] for y in ode.y_vars]
-    n_outputs = length(ode.y_vars)
-    parsed_x_equations = [parse_equation(eq, n_outputs) for eq in x_equations]
-    parsed_y_equations = [parse_equation(eq, n_outputs) for eq in y_equations]
+    parsed_x_equations = [parse_equation(eq, ode) for eq in x_equations]
+    parsed_y_equations = [parse_equation(eq, ode) for eq in y_equations]
 
     handled_x_equations = [handle_parsed_equation(parsed_x_equations[i], i) for i in eachindex(parsed_x_equations)]
     handled_y_equations = [handle_parsed_equation(parsed_y_equations[i], -1) for i in eachindex(parsed_y_equations)]
@@ -152,10 +158,6 @@ function ode_to_matrix(ode)
 end
 
 ode_to_matrix(ode)
-
-# TODO: Handle Output
-
-# NOTE: THIS MAY HAVE AN ISSUE WHEN THERE IS AN INPUT VARIABLE BUT IDK
 
 # --------- FOR LATER ------------------
 
