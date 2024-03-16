@@ -44,25 +44,3 @@ Wu = W[1:r, :]
 Wd = W[r+1:end, :]
 
 final_stuff(ode, Vn, Wd)
-
-# ----------------------------------------
-
-# We add t to the elements of the ring for the original polynomial
-new_ring_vars = vcat(ode.poly_ring.S, :t)
-
-new_ring, vars = PolynomialRing(QQ, new_ring_vars)
-
-# F will be an array of length n
-F = [zero(new_ring) // one(new_ring) for _ in 1:new_ring.nvars]
-
-for i in 1:length(ode.x_vars)
-    F[i] = parent_ring_change(ode.x_equations[ode.x_vars[i]] // one(ode.poly_ring), new_ring)
-end
-
-F_new = [F[i] // vars[i] for i in 1:new_ring.nvars]
-
-ode.x_equations[ode.x_vars[1]]
-
-F_new = get_F(ode)
-
-# ----------------------------------------
