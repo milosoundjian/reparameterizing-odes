@@ -15,9 +15,9 @@ H
 
 U
 
-r = count_zero_rows(H_K)
+r = count_zero_rows(H)
 
-A = U_K[end-r+1:end, :]
+A = U[end-r+1:end, :]
 
 _, V = hnf_with_normal_transform_column(A)
 
