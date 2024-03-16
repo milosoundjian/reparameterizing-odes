@@ -46,6 +46,11 @@ ode = @ODEmodel(
     o(t) = n(t)
 )
 
+ode1 = @ODEmodel(
+    x'(t) = a - k * x + h * x^2 * y + 1 / (x + y),
+    y'(t) = b - h * x^2 * y,
+)
+
 # We then extract the equations from the ODE
 x_equations = [ode.x_equations[x] for x in ode.x_vars]
 y_equations = [ode.y_equations[y] for y in ode.y_vars]
