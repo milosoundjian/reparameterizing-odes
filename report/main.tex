@@ -376,6 +376,17 @@ As explained earlier, the Hermite Normal Form of an integer matrix is unique, ho
 
 Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be going over step by step each individual part of the algorithm all together to demonstrate how it is implemented in \texttt{reparametrizing-odes}.
 
+The diagram below illustrates the steps of the algorithm as they are implemented in Julia \cite{bezanson2017julia}.
+
+\newpage
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{images/Algo.pdf}
+    % \caption{Enter Caption}
+    % \label{fig:enter-label}
+\end{figure}
+
 % TODO: Complete this section.
 
 \section{Implementation}
@@ -453,7 +464,7 @@ Following this from the predator prey model we get:
 
 Which is the matrix we need to move on to the next part of the algorithm.
 
-\subsection{Example Implementation 1}
+\subsection{Example 1}
 
 Let us say that we are working with the Verhulst Model of Logistic growth, defined by the differential equation given by:
 \[
@@ -472,83 +483,201 @@ ode_verhulst = @ODEmodel(
 )
 \end{lstlisting}
 
-We then following the use of the function that we implemented and previously explained \texttt{ode\_to\_matrix}. This function allows us to extract a matrix that describes the equation. We get the result:
+We then following the use of the function that we implemented and previously explained \texttt{ode\_to\_matrix}. This function allows us to extract a matrix that describes the equation. We get the result, with variable order \texttt{n, K, r, t}, to be:
 \[
-    \begin{bmatrix}
+    \begin{pmatrix}
         1  & 0 \\
         -1 & 0 \\
         1  & 1 \\
         1  & 1
-    \end{bmatrix}
+    \end{pmatrix}
 \]
 
 Using Proposition 5.1 from \cite{Hubert2013} we can use this matrix to determine the matrix for the scaling symmetries of our system. We recall that this means we start by finding the \textit{row} Hermite Normal Form of \(K\) and a corresponding Hermite Multiplier.
 
-% TODO: FIX THE MATRIX BEYOND HERE
-
 To do this we use the \texttt{hnf\_with\_transform} from Nemo \cite{nemo}, which gives us the resulting \textit{row} Hermite Normal Form of \(K\):
 \[
-    H = \begin{bmatrix}
+    H = \begin{pmatrix}
         1 & 0 \\
         0 & 1 \\
         0 & 0 \\
         0 & 0
-    \end{bmatrix}
+    \end{pmatrix}
 \]
 
 And a corresponding Hermite Multiplier:
 \[
-    U = \begin{bmatrix}
-        1  & 1  & 0 & 0 \\
-        0  & -1 & 0 & 0 \\
-        -1 & 0  & 1 & 0 \\
-        0  & 1  & 0 & 1
-    \end{bmatrix}
+    U = \begin{pmatrix}
+        1  & 0 & 0 & 0  \\
+        -1 & 0 & 0 & 1  \\
+        0  & 0 & 1 & -1 \\
+        1  & 1 & 0 & 0
+    \end{pmatrix}
 \]
 
 Proposition 5.1 tells us that we look at the number of zero rows of \(H\), which we call \(r\), then taking the last \(r\) rows of \(U\) gives us the matrix \(A\) which gives us a matrix that describes the scaling symmetries of the system.
 \[
-    A = \begin{bmatrix}
-        -1 & 0 & 1 & 0 \\
-        0  & 1 & 0 & 1
-    \end{bmatrix}
+    A = \begin{pmatrix}
+        0 & 0 & 1 & -1 \\
+        1 & 1 & 0 & 0
+    \end{pmatrix}
 \]
 
 % TODO: Describe in full detail how the scaling symmetries are described here.
 
-The final step here is to get the \textit{column} Hermite Normal Form of \(A\), which is used to determine the new system. Using the new \texttt{hnf\_with\_normal\_transform\_column} function that we implemented earlier, we can find that our Normal Hermite Multiplier and its inverse are:
+The final step here is to get the \textit{column} Hermite Normal Form of \(A\), which is used to determine the new system. Using the new \texttt{hnf\_with\_normal\_transform\_column} function that we implemented earlier, we can find that our Normal Hermite Multiplier is:
 \[
-    V = \begin{bmatrix}
-        -1 & 0 & 1 & 0  \\
-        0  & 1 & 0 & -1 \\
-        0  & 0 & 1 & 0  \\
-        0  & 0 & 0 & 1
-    \end{bmatrix}
-    \quad \text{and} \quad
-    W = \begin{bmatrix}
-        -1 & 0 & 1 & 0 \\
-        0  & 1 & 0 & 1 \\
-        0  & 0 & 1 & 0 \\
-        0  & 0 & 0 & 1
-    \end{bmatrix}
+    V = \begin{pmatrix}
+        0 & 1 & -1 & 0 \\
+        0 & 0 & 1  & 0 \\
+        1 & 0 & 0  & 1 \\
+        0 & 0 & 0  & 1
+    \end{pmatrix}
 \]
 
-% TODO: Understand and explain the last steps in the algorithm.
+We then can easily find its inverse \(W\) to be \(V^{-1}\), so:
+\[
+    W = \begin{pmatrix}
+        0 & 0 & 1 & -1 \\
+        1 & 1 & 0 & 0  \\
+        0 & 1 & 0 & 0  \\
+        0 & 0 & 0 & 1
+    \end{pmatrix}
+\]
 
-\subsection{Example Implementation 2}
+Now that we have these matrices, what is left to do is to follow the last steps of the algorithm to get our new ODE model.
+
+The last steps of the algorithm require us to split \(V\) into \(V_{\mathfrak{i}}\) and \(V_{\mathfrak{n}}\). Again following the algorithm in \cite{Hubert2013}, \(V_{\mathfrak{i}}\) is the first \(r\) columns of \(V\) and \(V_{\mathfrak{n}}\) is the last \(n - r\) columns of \(V\). Since \(r = 2\) in our example, we get that:
+\[
+    V_{\mathfrak{i}} = \begin{pmatrix}
+        0 & 1 \\
+        0 & 0 \\
+        1 & 0 \\
+        0 & 0
+    \end{pmatrix}
+\]
+
+and that:
+\[
+    V_{\mathfrak{n}} = \begin{pmatrix}
+        -1 & 0 \\
+        1  & 0 \\
+        0  & 1 \\
+        0  & 1
+    \end{pmatrix}.
+\]
+
+Similarly, \(W\) is split into \(W_{\mathfrak{u}}\) and \(W_{\mathfrak{d}}\), where \(W_{\mathfrak{u}}\) is the first \(r\) rows of \(W\) and \(W_{\mathfrak{d}}\) is the last \(n - r\) rows of \(W\). In this example we therefore have that:
+\[
+    W_{\mathfrak{u}} = \begin{pmatrix}
+        0 & 0 & 1 & -1 \\
+        1 & 1 & 0 & 0
+    \end{pmatrix}.
+\]
+
+and that:
+\[
+    W_{\mathfrak{d}} = \begin{pmatrix}
+        0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 1
+    \end{pmatrix}.
+\]
+
+The matrices we care about here are \(V_{\mathfrak{n}}\) and \(W_{\mathfrak{d}}\). We will then use Proposition 6.2 from \cite{Hubert2013} in order to get our result. This proposition gives us the formula, that our new reparametrized ODE will be:
+\[
+    \diff{y}{t} \star F(y^{W_{\mathfrak{n}}}) \cdot V_{\mathfrak{n}}
+\]
+
+First we have to define what \(F\) defines here. We have that \(\diff{z}{t} = z\star F(z)\), where \(z\) is a vector of all the variables in the ODE, so in this example \(z = \begin{pmatrix} n & k & r & t \end{pmatrix}\). So:
+\begin{align*}
+    \diff{z}{t}
+     & = \begin{pmatrix}
+             \diff{n}{t} & \diff{k}{t} & \diff{r}{t} & \diff{t}{t}
+         \end{pmatrix} \\
+     & = \begin{pmatrix}
+             \frac{rnk - rn^2}{k} & 0 & 0 & 1 \\
+         \end{pmatrix}
+\end{align*}
+
+Therefore, we have that:
+\[
+    F(z) = \begin{pmatrix}
+        \frac{rk - rn}{k} & 0 & 0 & \frac{1}{t}
+    \end{pmatrix}
+\]
+
+We have that our new parameters, which are in the vector \(y\) are going to be \(n - r\) in number. Since in this example \(n = 4\) and \(r = 2\). We have that:
+\[
+    y = \begin{pmatrix}
+        y_1 & y_2
+    \end{pmatrix}
+\]
+
+We then take \(y^{W_{\mathfrak{d}}}\). The definition of how to take a vector of polynomials to the power of a matrix is explained in section 3.1. So we have that:
+\begin{align*}
+    y^{W_{\mathfrak{d}}}
+     & = \begin{pmatrix}
+             y_1 & y_2
+         \end{pmatrix}^{
+    \begin{pmatrix}
+        0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 1
+    \end{pmatrix}}                                             \\
+     & = \begin{pmatrix}
+             y_1^0 y_2^0 & y_1^1 y_2^0 & y_1^0 y_2^0 & y_1^0 y_2^1
+         \end{pmatrix} \\
+     & = \begin{pmatrix}
+             1 & y_1 & 1 & y_2
+         \end{pmatrix}
+\end{align*}
+
+We then have to take \(F(y^{W_{\mathfrak{d}}})\). Since our variable order is \(n, k, r, t\),
+\begin{align*}
+    F(y^{W_{\mathfrak{d}}})
+     & = F(\begin{pmatrix}
+               1 & y_1 & 1 & y_2
+           \end{pmatrix})                         \\
+     & = \begin{pmatrix}
+             \frac{y_1 - 1}{y_1} & 0 & 0 & \frac{1}{y_2}
+         \end{pmatrix}
+\end{align*}
+
+Now, \(F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}\):
+\[
+    F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}} =
+    \begin{pmatrix}
+        \frac{1 - y_1}{y_1} & \frac{1}{y_2}
+    \end{pmatrix}
+\]
+
+Then the final result we get that
+\begin{align*}
+    \diff{y}{t}
+    & = y \star (F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}) \\
+    & = \begin{pmatrix} 1 - y_1 & 1 \end{pmatrix}
+\end{align*}
+
+With this we can conclude and get our final new reparametrized differential equation to be (since the \(y_2\) equation is just a constant):
+\[
+    \diff{y_1}{t} = 1 - y_1
+\]
+
+Which as we can tell is much simpler than the equation we had in the beginning.
+
+\subsection{Example 2}
 
 % TODO: Do another implementation.
 
-% TODO: I would want the explaination here to include a output variable so that it would be more relevant to a user.
+% TODO: I would want the explanation here to include a output variable so that it would be more relevant to a user.
 
 \newpage
 \bibliographystyle{plain}
 \bibliography{main}
 
-\newpage
-\appendix
+% \newpage
+% \appendix
 
-\section{Appendix}
-\label{sec:appendix}
+% \section{Appendix}
+% \label{sec:appendix}
 
 \end{document}
