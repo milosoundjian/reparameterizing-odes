@@ -130,35 +130,35 @@
 
 % \pagenumbering{arabic}
 
+\section{Background}
+
+\subsection{Julia Programming Language}
+
+The Julia programming language, introduced in 2012, is a high-level, high-performance language designed for technical and scientific computing. It is designed to combine the usability of python with the speed and efficiency of C \cite{bezanson2017julia}. It is well suited for symbolic computation such as operations with polynomials and matrices thanks to sophisticated mathematical syntax, dynamic typing, and extensive support for numerical operations. Furthermore, libraries such as Nemo.jl make it easy to have access to ecosystems of packages that can all work together to make going from theoretical math to algorithms in code much simpler.
+
+\subsection{Nemo}
+
+The Nemo package for Julia is designed to support work in commutative algebra and number theory, providing tools for arithmetic operations, polynomial manipulations, and matrix computations \cite{nemo}. It leverages the Flint library to offer efficient arithmetic capabilities. Nemo is valuable for researchers and mathematicians needing high-performance computational tools. Its integration with Julia enhances its appeal by combining Flint's arithmetic efficiency with Julia's high-level syntax and performance, making it a practical choice for computational mathematics projects, including the StructuralIdentifiability package. 
+
+\subsection{StructuralIdentifiability}
+
+StructuralIdentifiability.jl is a package developed for the Julia programming language, designed to evaluate whether parameters within parametric Ordinary Differential Equation (ODE) models can be uniquely determined, covering both local and global perspectives. It facilitates the calculation of functions that can identify states and parameters. Additionally, the package provides tools for analyzing local identifiability in models based on discrete time. It serves as an introductory resource for understanding structural identifiability.
+
+\newpage
+
 \section{Introduction}
 
-
-In their paper ``Scaling Invariants and Symmetry Reductions of Dynamical Systems'' \cite{Hubert2013}, they discuss the theory behind the algorithm and how it can be implemented.
-
-\begin{align*}
-    \diff{n}{t}
-     & = n (r (1 - \frac{n}{K} - k \frac{p}{n + d})), \\
-    \diff{p}{t}
-     & = sp (1 - h \frac{p}{n})
-\end{align*}
+In their paper ``Scaling Invariants and Symmetry Reductions of Dynamical Systems'' \cite{Hubert2013}, they discuss the theory behind the algorithm and how it can be implemented. The algorithm is based on an extension of the Buckingham-\(\pi\)-theorem to enable a systematic algorithm to find the invariants that the Buckingham-\(\pi\)-theorem describes but does not tell us how to obtain.
 
 In order to do this, I implemented in Julia, the necessary functions, such as getting the Hermite Multipliers in both row and column form. Most of the references for this. These include the functions \cite{Hubert2013}
 
-Furthermore, I was (hopefully) able to integrate this algorithm that I had implemented into a more overarching Julia library ``StructuralIdentifiability.jl''
+Upon the implementation of the full algorithm, the goal of this paper is to integrate it within the existing 
 
-{\color{purple}Gleb: some points to keep in mind
-\begin{enumerate}
-    \item mention relations to the Buckingham Pi theorem and dimension analysis
-\end{enumerate}
-
-}
-
-% \subsection*{Notes from Week 1}
-
-
-\section{Background}
+\section{Mathematical Background}
 
 \subsection{Hermite Normal Forms and Hermite Multipliers}
+
+The algorithm described in \cite{Hubert2013} extensively uses Hermite Normal Forms and what it calls ``Hermite Multipliers''. So this section will go over the definitions that are used in that paper and here in order to avoid potential errors over notation since different notations for Hermite Normal Forms exist from different authors.
 
 \subsubsection{Hermite Normal Forms (HNFs)}
 
@@ -380,6 +380,8 @@ The diagram below illustrates the steps of the algorithm as they are implemented
 
 \newpage
 
+% TODO: Make this diagram nice
+
 \begin{figure}[H]
     \centering
     \includegraphics{images/Algo.pdf}
@@ -387,9 +389,9 @@ The diagram below illustrates the steps of the algorithm as they are implemented
     % \label{fig:enter-label}
 \end{figure}
 
-% TODO: Complete this section.
+\newpage
 
-\section{Implementation}
+\section{Implementation in Julia}
 
 \subsection{Transformation of ODEs into Matrix Form}
 
@@ -421,7 +423,7 @@ Let us start with the Predator Prey Model:
      & = sp (1 - h \frac{p}{n})
 \end{align*}
 
-In our `Structuralidentifiability' \texttt{@ODEmodel} struct, we will be interested in three fields. \texttt{x\_vars}, \texttt{parameters} and \texttt{x\_equations}. In this example \texttt{x\_vars} is the vector containing \texttt{n(t)} and \texttt{p(t)}, \texttt{parameters} is the vector containing \texttt{K, d, h, k, r, s}, \texttt{x\_equations} is a dictionary mapping \texttt{x\_vars} to the corresponding equation for it in the ODE.
+In our `StructuralIdentifiability' \texttt{@ODEmodel} struct, we will be interested in three fields. \texttt{x\_vars}, \texttt{parameters} and \texttt{x\_equations}. In this example \texttt{x\_vars} is the vector containing \texttt{n(t)} and \texttt{p(t)}, \texttt{parameters} is the vector containing \texttt{K, d, h, k, r, s}, \texttt{x\_equations} is a dictionary mapping \texttt{x\_vars} to the corresponding equation for it in the ODE.
 
 With that in mind we start by extracting a list of the equations. In this example giving us a list like this:
 \begin{lstlisting}
@@ -657,18 +659,33 @@ Then the final result we get that
     & = \begin{pmatrix} 1 - y_1 & 1 \end{pmatrix}
 \end{align*}
 
-With this we can conclude and get our final new reparametrized differential equation to be (since the \(y_2\) equation is just a constant):
-\[
-    \diff{y_1}{t} = 1 - y_1
-\]
+With this we can conclude and get our final new reparametrized differential equation to be:
+\begin{align*}
+    \diff{y_1}{t} & = 1 - y_1 \\
+    \diff{y_2}{t} & = 1
+\end{align*}
 
 Which as we can tell is much simpler than the equation we had in the beginning.
 
 \subsection{Example 2}
 
+Let us look at a different example, the Schakenberg Model for a Simple Chemical Equation with Limit Cycle. The differential equation is as follows:
+\begin{align*}
+    \diff{x}{t} & = a - kx + hx^2 y, \\
+    \diff{y}{t} & = b - hx^2 y.
+\end{align*}
+
+Again we start by converting this differential equation into a
+
 % TODO: Do another implementation.
 
 % TODO: I would want the explanation here to include a output variable so that it would be more relevant to a user.
+
+\section{Conclusion}
+
+\section{Potential Improvements}
+
+The algorithm that we implemented, while reducing the number of parameters in the system, does have some flaws when it comes to by how much it reduces
 
 \newpage
 \bibliographystyle{plain}
