@@ -15,7 +15,7 @@ end
 
 ode = @ODEmodel(
     n'(t) = r * n * (1 - n / k),
-    o(t) = n(t)
+    # o(t) = n(t)
 )
 
 # # We then extract the equations from the ODE
@@ -41,20 +41,22 @@ function parse_equation(eq, ode)
     # Remove the columns for the outputs
     n_x_vars = length(ode.x_vars)
     n_outputs = length(ode.y_vars)
-    if n_outputs != 0
-        # Remove the n_x_vars + 1 to n_x_vars + n_outputs columns from the numerator and denominator
-        # keeping the columns after that
-        M_num = hcat(M_num[:, 1:n_x_vars], M_num[:, n_x_vars + n_outputs + 1:end])
-        M_den = hcat(M_den[:, 1:n_x_vars], M_den[:, n_x_vars + n_outputs + 1:end])
-    end
+
+    # Remove the n_x_vars + 1 to n_x_vars + n_outputs columns from the numerator and denominator
+    # keeping the columns after that
+    M_num = hcat(M_num[:, n_x_vars + n_outputs + 1:end], M_num[:, 1:n_x_vars])
+    M_den = hcat(M_den[:, n_x_vars + n_outputs + 1:end], M_den[:, 1:n_x_vars])
 
     return (M_num, M_den)
 end
 
-# parsed_x_equations = [parse_equation(eq, ode) for eq in x_equations]
+parsed_x_equations = [parse_equation(eq, ode) for eq in x_equations]
 # parsed_y_equations = [parse_equation(eq, ode) for eq in y_equations]
 
-function handle_parsed_equation(num_den, index)
+function handle_parsed_equation(num_den, index, ode)
+    n_params = length(ode.parameters)
+    # n_x_vars = length(ode.x_vars)
+
     num, den = deepcopy(num_den)
 
     # We will look at the first row of the denominator that we will set to 0 and change the rest accordingly
@@ -62,7 +64,6 @@ function handle_parsed_equation(num_den, index)
 
     # If the first row of the denominator is 0 then we can skip this step
     if !iszero(row_to_zero)
-        # if !(row_to_zero == zero_matrix(ZZ, 1, length(row_to_zero)))
         # We subract row_to_zero from all the rows in the numerator
         n_num = size(num, 1)
         for i in 1:n_num
@@ -76,14 +77,16 @@ function handle_parsed_equation(num_den, index)
         end
     end
 
+    # return (num, den)
+
     # Handling the dx/dt term (if not a output equation)
     if index != -1
         # Padding the numerator with ones in the last column (for t)
         padding = matrix(ZZ, [[1] for i in 1:size(num, 1)])
         num = hcat(num, padding)
 
-        # subtract 1 from the indexth column of the numerator
-        num[:, index] = num[:, index] - padding
+        # subtract 1 from the n_params+indexth column of the numerator
+        num[:, n_params+index] = num[:, n_params+index] - padding
 
         # Padding the denominator with zeros in the last column (for t)
         den = hcat(den, zero_matrix(ZZ, size(den, 1), 1))
@@ -105,7 +108,7 @@ function handle_parsed_equation(num_den, index)
     return num_den
 end
 
-# handled_x_equations = [handle_parsed_equation(parsed_x_equations[i], i) for i in eachindex(parsed_x_equations)]
+handled_x_equations = [handle_parsed_equation(parsed_x_equations[i], i, ode) for i in eachindex(parsed_x_equations)]
 # handled_y_equations = [handle_parsed_equation(parsed_y_equations[i], -1) for i in eachindex(parsed_y_equations)]
 
 function ode_to_matrix(ode)
@@ -114,8 +117,8 @@ function ode_to_matrix(ode)
     parsed_x_equations = [parse_equation(eq, ode) for eq in x_equations]
     parsed_y_equations = [parse_equation(eq, ode) for eq in y_equations]
 
-    handled_x_equations = [handle_parsed_equation(parsed_x_equations[i], i) for i in eachindex(parsed_x_equations)]
-    handled_y_equations = [handle_parsed_equation(parsed_y_equations[i], -1) for i in eachindex(parsed_y_equations)]
+    handled_x_equations = [handle_parsed_equation(parsed_x_equations[i], i, ode) for i in eachindex(parsed_x_equations)]
+    handled_y_equations = [handle_parsed_equation(parsed_y_equations[i], -1, ode) for i in eachindex(parsed_y_equations)]
 
 
     # Concatenate the handled equations
@@ -132,3 +135,5 @@ function ode_to_matrix(ode)
     # return transpose(res)
     return transpose(res)
 end
+
+ode_to_matrix(ode)
