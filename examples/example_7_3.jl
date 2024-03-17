@@ -1,12 +1,11 @@
 include("../src/hnf_column_normal.jl")
 include("../src/ode_to_matrix.jl")
+include("../src")
 
-using StructuralIdentifiability: parent_ring_change
-
+# Lotka-Volterra Equation
 ode = @ODEmodel(
-    x'(t) = a - k * x(t) + h * x(t)^2 * y,
-    y'(t) = b - h * x(t)^2 * y,
-    # o(t) = x(t)
+    x'(t) = k_1 * a * x - k_2 * x * y,
+    y'(t) = k_2 * x * y - k_3 * y,
 )
 
 # ode = @ODEmodel(
