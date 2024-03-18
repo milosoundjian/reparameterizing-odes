@@ -469,7 +469,7 @@ The comes the `parsing' process, where we turn the equations into tuples of nume
 \end{lstlisting}
 % TODO: Maybe convert this into full matrix form
 
-The order of the variables here is the \texttt{parameters} field elements followed by \texttt{x\_vars}  field elements.
+The order of the variables here is the \texttt{parameters} field elements followed by \texttt{x\_vars} field elements.
 
 We then have to take into account the \(\diff{(x)}{t}\) for all the \texttt{x\_vars} and add the independent variable \texttt{t} to our resulting matrix so we have a function that takes the `parsed' equations and returns the new resulting equations. It also takes care of normalizing the denominator to follow the specifications of the algorithm in \cite{Hubert2013}.
 
@@ -687,6 +687,33 @@ The code also gives us a mapping from the old new parameters using the relation 
     y_6 \mapsto r t
 \]
 
+If we were to add the additional constraint that the variable \(t\) was not scaled, which would be equivalent to adding a column of zeroes with a one in the last spot to \(K\).
+
+Doing this our algorithm will work similarly but will not rescale \(t\), giving us a new resulting reparameterization as:
+
+\begin{align*}
+    \diff{y_1}{dt} & = 0                                                                                        \\
+    \diff{y_2}{dt} & = 0                                                                                        \\
+    \diff{y_3}{dt} & = 0                                                                                        \\
+    \diff{y_4}{dt} & = 0                                                                                        \\
+    \diff{y_5}{dt} & = \frac{-y_1 y_3 y_5^2 + y_1 y_3 y_5 - y_2 y_3 y_5 y_6 - y_3 y_5^3 + y_3 y_5^2}{y_1 + y_5} \\
+    \diff{y_6}{dt} & = \frac{y_4 y_5 y_6 - y_4 y_6^2}{y_5}                                                      \\
+    \diff{y_7}{dt} & = 1                                                                                        \\
+\end{align*}
+
+And new variables in terms of the old variables as:
+\begin{align*}
+    y_1 \mapsto \frac{d}{K} \qquad
+    y_2 \mapsto \frac{h p}{K} \qquad
+    y_3 \mapsto \frac{k}{h} \qquad
+    y_4 \mapsto r \qquad
+    y_5 \mapsto t \qquad
+    y_6 \mapsto s \qquad
+    y_7 \mapsto \frac{n}{K} \qquad
+\end{align*}
+
+As we can see here the variable \(t\) has not been scaled.
+
 \section{Full Example}
 
 This section gives another example with the full workthrough of the algorithm.
@@ -894,25 +921,47 @@ Again we get the new parameters in terms of the new parameters as a result as we
     y_2 \mapsto r t
 \]
 
+Again we can also make this algorithm not reparameterize \(t\) by the same method as in the previous model, in this case we would get the differentail equation system:
+\begin{align*}
+    \diff{y_1}{t} & = 0                    \\
+    \diff{y_2}{t} & = -y_1 y_2^2 + y_1 y_2 \\
+    \diff{y_3}{t} & = 1
+\end{align*}
+
+In this situation the new variables in terms of the old variables is given by:
+\[
+    y_1 \mapsto r \\
+    y_2 \mapsto \frac{n}{k} \\
+    y_3 \mapsto t
+\]
+
+Again we can see that \(t\) remains unscaled.
 
 \section{Conclusion}
 
 In this thesis, we implemented a novel methodology for the reparameterization of ordinary differential equation (ODE) models by using the scaling invariants and symmetry reductions. The approach, based on the algorithm by Hubert and Labahn \cite{Hubert2013}, has been implemented through the Julia programming language.
 
+The resulting algorithm has shown that such an algorithm can work and be efficient for reparametrizing ordinary differential equations.
+
 \section{Potential Improvements}
 
-The main flaw of the algorithm as it is implemented right now is that the user has no control over which parameters can stay fixed. To do this this algorithm would have to consider the output variables. Currently the code returns an error in this situation.
+The main flaw of the algorithm as it is implemented right now is that the user has no control over which parameters can stay fixed except for the independent variable \(t\). To do this this algorithm would have to consider the output variables.
 
-This flaw makes it so that the utility of this algorithm at present is limited.
+This flaw makes it so that the utility of this algorithm at present is limited. However, we have come up with a method to implement this.
+
+The method is to take the output equations and add them to the ODE matrix \(K\) so that when the scaling happens, the outputs are not scaled.
 
 \newpage
 \bibliographystyle{plain}
 \bibliography{main}
 
-% \newpage
-% \appendix
+\newpage
+\appendix
 
-% \section{Appendix}
-% \label{sec:appendix}
+\section{Appendix}
+
+All of the code for this project: \url{https://github.com/milosoundjian/reparameterizing-odes}
+
+\label{sec:appendix}
 
 \end{document}

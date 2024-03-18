@@ -2,6 +2,7 @@ using Nemo
 using StructuralIdentifiability
 
 using StructuralIdentifiability: parent_ring_change
+using StructuralIdentifiability: ODE
 
 function get_F(ode)
     # reorder ring order
@@ -63,7 +64,7 @@ function prop_6_2(ode, V_n, W_d)
     
     F = get_F(ode)
 
-    y = [dest_vars[i] // one(dest_ring) for i in 1:n_minus_r]
+    y = [dest_vars[i] for i in 1:n_minus_r]
 
     y_to_W_d = power_vector_matrix(y, W_d)
 
@@ -94,7 +95,13 @@ function prop_6_2(ode, V_n, W_d)
 
     y_to_z = Dict(zip(y, z_to_V_n))
 
-    return reparameterized_equations_dict, y_to_z
+    ode_dict = Dict(zip(y, reparameterized_equations))
+
+    # ode_dict = Dict{QQMPolyRingElem, }(k => v for (k, v) in ode_dict)
+
+    res = ODE{Nemo.QQMPolyRingElem}(ode_dict, empty(ode_dict), Array{QQMPolyRingElem, 1}())
+
+    return res, y_to_z
 end
 
 # prop_6_2(ode, V_n, W_d)

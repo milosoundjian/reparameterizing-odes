@@ -1,5 +1,6 @@
 using StructuralIdentifiability
 using Nemo
+using StructuralIdentifiability: ODE
 
 function vector_to_matrix(vec)
     n = length(vec)
@@ -131,6 +132,11 @@ function ode_to_matrix(ode)
     for i in 1:m
         res = vcat(res, handled_y_equations[i])
     end
+
+    # add a row of ones at the end
+    res = vcat(res, zero_matrix(ZZ, 1, size(res, 2)))
+    # set the bottom right element to 1
+    res[end, end] = 1
 
     # return transpose(res)
     return transpose(res)
