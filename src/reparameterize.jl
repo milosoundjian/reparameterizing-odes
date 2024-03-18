@@ -28,11 +28,12 @@ function ode_reparameterizate(ode)
 
     final_result = prop_6_2(ode, V_n, W_d)
 
-    return final_result, W_d
+    return final_result
 end
 
 ode = @ODEmodel(
-    n'(t) = r * n * (1 - n / k)
+    n'(t) = r * n * (1 - n / k),
+    # o(t) = n
 )
 
 ode_to_matrix(ode)
