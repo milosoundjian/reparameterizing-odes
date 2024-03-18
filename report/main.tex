@@ -676,11 +676,15 @@ Running this code gives us the new reparameterization of the ODE which is:
     \diff{y_6}{t} & = 1
 \end{align*}
 
-In order to see what each original variable corresponds to in terms of the new variables, we can look at the matrix \(W_{\mathfrak{d}}\). The rows correspond to the original parameters (in this case \(K, d, \dots, p, t\) and the columns representing the power of the new parameters \(y_1, \dots\). So for example in this case:
+The code also gives us a mapping from the old new parameters using the relation that \(y(t) = z(t)^{V_\mathfrak{n}}\). In this case the result is that:
 
-We have the substitution from:
 \[
-    K \mapsto 1, \qquad d \mapsto y_1, \qquad h \mapsto 1, \qquad k \mapsto y_2, \qquad r \mapsto 1, \qquad s \mapsto y_3, \qquad n \mapsto y_3, \qquad p \mapsto y_5, \qquad t \mapsto y_6
+    y_1 \mapsto \frac{d}{k} \qquad
+    y_2 \mapsto \frac{k}{h} \qquad
+    y_3 \mapsto \frac{s}{r} \qquad
+    y_4 \mapsto \frac{n}{K} \qquad
+    y_5 \mapsto \frac{hp}{K} \qquad
+    y_6 \mapsto r t
 \]
 
 \section{Full Example}
@@ -884,10 +888,12 @@ With this we can conclude and get our final new reparametrized differential equa
 
 Which as we can tell is much simpler than the equation we had in the beginning.
 
-Finally we can look at how the substitution looks by looking at \(W_{\mathfrak{d}}\). In this case:
+Again we get the new parameters in terms of the new parameters as a result as well here giving us that:
 \[
-    k \mapsto 1, \qquad r \mapsto 1, \qquad n \mapsto y_1, \qquad t \mapsto y_2.
+    y_1 \mapsto \frac{n}{k} \qquad
+    y_2 \mapsto r t
 \]
+
 
 \section{Conclusion}
 
@@ -895,7 +901,9 @@ In this thesis, we implemented a novel methodology for the reparameterization of
 
 \section{Potential Improvements}
 
-The algorithm that we implemented, while reducing the number of parameters in the system, does have some flaws when it comes to by how much it reduces
+The main flaw of the algorithm as it is implemented right now is that the user has no control over which parameters can stay fixed. To do this this algorithm would have to consider the output variables. Currently the code returns an error in this situation.
+
+This flaw makes it so that the utility of this algorithm at present is limited.
 
 \newpage
 \bibliographystyle{plain}
