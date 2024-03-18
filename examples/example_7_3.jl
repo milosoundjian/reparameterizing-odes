@@ -47,4 +47,4 @@ Wu = W[1:r, :]
 # The last n-r rows of W
 Wd = W[r+1:end, :]
 
-final_stuff(ode, Vn, Wd)
+prop_6_2(ode, Vn, Wd)

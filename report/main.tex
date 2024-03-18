@@ -138,7 +138,7 @@ The Julia programming language, introduced in 2012, is a high-level, high-perfor
 
 \subsection{Nemo}
 
-The Nemo package for Julia is designed to support work in commutative algebra and number theory, providing tools for arithmetic operations, polynomial manipulations, and matrix computations \cite{nemo}. It leverages the Flint library to offer efficient arithmetic capabilities. Nemo is valuable for researchers and mathematicians needing high-performance computational tools. Its integration with Julia enhances its appeal by combining Flint's arithmetic efficiency with Julia's high-level syntax and performance, making it a practical choice for computational mathematics projects, including the StructuralIdentifiability package. 
+The Nemo package for Julia is designed to support work in commutative algebra and number theory, providing tools for arithmetic operations, polynomial manipulations, and matrix computations \cite{nemo}. It leverages the Flint library to offer efficient arithmetic capabilities. Nemo is valuable for researchers and mathematicians needing high-performance computational tools. Its integration with Julia enhances its appeal by combining Flint's arithmetic efficiency with Julia's high-level syntax and performance, making it a practical choice for computational mathematics projects, including the StructuralIdentifiability package.
 
 \subsection{StructuralIdentifiability}
 
@@ -150,11 +150,13 @@ StructuralIdentifiability.jl is a package developed for the Julia programming la
 
 In their paper ``Scaling Invariants and Symmetry Reductions of Dynamical Systems'' \cite{Hubert2013}, they discuss the theory behind the algorithm and how it can be implemented. The algorithm is based on an extension of the Buckingham-\(\pi\)-theorem to enable a systematic algorithm to find the invariants that the Buckingham-\(\pi\)-theorem describes but does not tell us how to obtain.
 
-In order to do this, I implemented in Julia, the necessary functions, such as getting the Hermite Multipliers in both row and column form. Most of the references for this. These include the functions \cite{Hubert2013}
+The algorithm is described in the paper but no implementation of it exists. Thus the goal of this paper is to create an implementation of this algorithm in Julia.
 
-Upon the implementation of the full algorithm, the goal of this paper is to integrate it within the existing 
+Some obstacles to the implementation of this algorithm were that while libraries existed for getting Hermite Normal Forms, they only existed for \textit{row} Hermite Normal Form and not Column Hermite Normal forms, so it was necessary to create a function to do this and to prove its accuracy. This is detailed in section \ref{algo-hnf}.
 
-\section{Mathematical Background}
+An additional goal of this paper is to possibly add the implemented algorithm into the Julia library StructuralIdentifiability \cite{structidjl} to make it accessible to scientists in the fields of Biology and Chemistry who are working with Ordinary Differential Equations that can make use of reparameterization to make them easier to solve.
+
+\section{Background}
 
 \subsection{Hermite Normal Forms and Hermite Multipliers}
 
@@ -246,7 +248,7 @@ Any integer matrix \(A\) can be transformed via integer row operations (respecti
 \end{example}
 
 
-\subsubsection{Algorithmically determining HNF and Hermite Multipliers}
+\subsubsection{Algorithmically determining HNF and Hermite Multipliers} \label{algo-hnf}
 
 There exists algorithms that can computer Hermite Normal Forms which can be found for example in \cite{cohen2013course}. The steps and complexity of this algorithm is discussed there as well. However, for the scope of this paper we will not discuss these algorithms in detail.
 
@@ -254,12 +256,14 @@ Effectively, we will use these algorithms as a part of our algorithm. To do this
 
 This means that in our algorithm, we already have a tool that allows us to calculate row Hermite Normal Form. What we need to do is to find a way to use this tool, for example by doing matrix operations on the input matrix \(A\) and on the result from using the function \texttt{hnf\_with\_transform} to be able to create a new function that taking input matrix \(A\), returns the column hermite normal form of \(A\). In the next section we will show how we are able to do this and prove our new method.
 
+\newpage
+
 \begin{algorithm}[H]
     \caption{hnf\_with\_transform\_column}
 
     \begin{description}
         \item[Input] Integer matrix \(A\)
-        \item[Output] HNF matrix \(H\) and Hermite Multiplier \(V\)
+        \item[Output] \textit{column} HNF matrix \(H\) and Hermite Multiplier \(V\)
     \end{description}
 
     \begin{enumerate}[label = \textbf{(Step~\arabic*)}, leftmargin=*, align=left, labelsep=2pt, itemsep=0pt]
@@ -368,15 +372,37 @@ It is very clear to see how it uses the steps of our algorithm to get the \texti
 
 \subsubsection{Normal Hermite Multiplier}
 
-As explained earlier, the Hermite Normal Form of an integer matrix is unique, however the Hermite Multiplier itself is not, thus for any matrix
+As explained earlier, the Hermite Normal Form of an integer matrix is unique, however the Hermite Multiplier itself is not. In section 2.2 of \cite{Hubert2013}, they describe a way to calculate the \textit{row} Hermite Normal Form Normal Hermite Multiplier through making a change to the input matrix \(A\). Proposition 2.3 in the paper defines the Normal Hermite Multiplier and provides the algorithm.
 
-% TODO: Explain the algorithm for Normal Hermite Multiplier.
+This algorithm was implemented in Julia for this project. The implementation is as follows.
+
+\hfill\break
+
+\begin{algorithm}[H]
+    \caption{hnf\_with\_normal\_transform\_column}
+
+    \begin{description}
+        \item[Input] Integer matrix \(A\)
+        \item[Output] \textit{column} HNF matrix \(H\) and \textit{Normal} Hermite Multiplier \(V\)
+    \end{description}
+
+    \begin{enumerate}[label = \textbf{(Step~\arabic*)}, leftmargin=*, align=left, labelsep=2pt, itemsep=0pt]
+        \item Set \(H\) to be the \textit{column} Hermite Normal Form of \(A\).
+        \item Set \(r\) and \(n\) to be the number of rows and columns of \(A\) respectively.
+        \item Set \(B\) to be A with an \(n \times n\) identity matrix on top, aka \(B = \begin{bmatrix} I_n \\ A \end{bmatrix}\).
+        \item Set \(H^*\) and\textit{row} Hermite Normal Form of \(B\).
+        \item Set \(V_i\) to be the last \(r\) columns of \(H^*\) with the bottom \(r\) rows removed.
+        \item Set \(V_n\) to be the first \(n - r\) columns of with the bottom \(r\) rows removed.
+        \item Set \(V = \begin{bmatrix} V_i & V_n \end{bmatrix}\).
+        \item Return \(H\) and \(V\).
+    \end{enumerate}
+\end{algorithm}
 
 \section{Algorithm}
 
-Now that we have a way to calculate the \textit{column} Hermite Normal Form, we can implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013}, so in this we will be going over step by step each individual part of the algorithm all together to demonstrate how it is implemented in \texttt{reparametrizing-odes}.
+Now that we have a way to calculate the \textit{column} Hermite Normal Forms and \textit{column} Normal Hermite Transforms, we finally have all the tools to implement the algorithm to simplify the ODE equations. The proofs of the algorithm are explained in \cite{Hubert2013} so this paper is not going to go over them. However, we will be going over each part of the algorithm with examples to demonstrate how it comes together in order to reparameterize ODEs.
 
-The diagram below illustrates the steps of the algorithm as they are implemented in Julia \cite{bezanson2017julia}.
+The clearest way to illustrate this algorithm is with a diagram. The diagram below illustrates the steps of the algorithm that will be elaborated in the next section with examples.
 
 \newpage
 
@@ -391,7 +417,9 @@ The diagram below illustrates the steps of the algorithm as they are implemented
 
 \newpage
 
-\section{Implementation in Julia}
+\section{Implementation}
+
+The following section explains how this algorithm was implemented in practice with an example.
 
 \subsection{Transformation of ODEs into Matrix Form}
 
@@ -428,45 +456,236 @@ In our `StructuralIdentifiability' \texttt{@ODEmodel} struct, we will be interes
 With that in mind we start by extracting a list of the equations. In this example giving us a list like this:
 \begin{lstlisting}
 2-element Vector{AbstractAlgebra.Generic.FracFieldElem{QQMPolyRingElem}}:
-(-n(t)^3*r + n(t)^2*K*r - n(t)^2*d*r - n(t)*p(t)*K*k + n(t)*K*d*r)//(n(t)*K + K*d)
+(-n(t)^3*r + n(t)^2*K*r - n(t)^2*d*r - 
+n(t)*p(t)*K*k*r + n(t)*K*d*r)//(n(t)*K + K*d)
 (n(t)*p(t)*s - p(t)^2*h*s)//n(t)
 \end{lstlisting}
 
 The comes the `parsing' process, where we turn the equations into tuples of numerator and denominator matrices. We handle non fractional equations by turning them into fractional equations by setting the denominator to 1. We then concert the result into Nemo ZZMatrices that will be easier to work with. At this stage we are left with a series of matrices. In our example we get
 \begin{lstlisting}
 2-element Vector{Tuple{ZZMatrix, ZZMatrix}}:
-([3 0 0 0 0 0 1 0; 2 0 1 0 0 0 1 0; 2 0 0 1 0 0 1 0;
-1 1 1 0 0 1 0 0; 1 0 1 1 0 0 1 0], [1 0 1 0 0 0 0 0; 0 0 1 1 0 0 0 0])
-([1 1 0 0 0 0 0 1; 0 2 0 0 1 0 0 1], [1 0 0 0 0 0 0 0])
+([0 0 0 0 1 0 3 0; 1 0 0 0 1 0 2 0; 0 1 0 0 1 0 2 0; 1 0 0 1 1 0 1 1; 1 1 0 0 1 0 1 0], [1 0 0 0 0 0 1 0; 1 1 0 0 0 0 0 0])
+([0 0 0 0 0 1 1 1; 0 0 1 0 0 1 0 2], [0 0 0 0 0 0 1 0])
 \end{lstlisting}
 % TODO: Maybe convert this into full matrix form
 
-The order of the variables here is the \texttt{x\_vars} field elements followed by \texttt{parameters} field elements.
+The order of the variables here is the \texttt{parameters} field elements followed by \texttt{x\_vars}  field elements.
 
 We then have to take into account the \(\diff{(x)}{t}\) for all the \texttt{x\_vars} and add the independent variable \texttt{t} to our resulting matrix so we have a function that takes the `parsed' equations and returns the new resulting equations. It also takes care of normalizing the denominator to follow the specifications of the algorithm in \cite{Hubert2013}.
 
-% TODO: Add more info on this step
+We normalize the denominator by subtracting the first row of the denominator to all the rows of the numerator and denominator, thus ensuring that the numerator has at least a single non-variable term and thus being normalized.
 
-Finally, with the output being a few separate matrices, the last step is to concatenate them together to achieve our desired final result matrix.
+Finally, with the output being a few separate matrices, the last step is to concatenate them together to achieve our desired ODE matrix \(K\).
 
 Following this from the predator prey model we get:
 \[
-    \begin{pmatrix}
-        1  & 0 & 0  & -1 & -1 & -1 & 0 & -1 \\
-        0  & 0 & 0  & 1  & 0  & 0  & 0 & 1  \\
+    K = \begin{pmatrix}
         -1 & 0 & -1 & 0  & 0  & 0  & 0 & 0  \\
         0  & 0 & 1  & 0  & 1  & 1  & 0 & 0  \\
         0  & 0 & 0  & 0  & 0  & 0  & 0 & 1  \\
         0  & 0 & 0  & 1  & 0  & 0  & 0 & 0  \\
         1  & 1 & 1  & 0  & 1  & 0  & 0 & 0  \\
+        1  & 0 & 0  & -1 & -1 & -1 & 0 & -1 \\
         0  & 0 & 0  & 0  & 0  & 0  & 1 & 1  \\
+        0  & 0 & 0  & 1  & 0  & 0  & 0 & 1  \\
         1  & 1 & 1  & 1  & 1  & 0  & 1 & 1
-    \end{pmatrix}
+    \end{pmatrix}.
 \]
 
 Which is the matrix we need to move on to the next part of the algorithm.
 
-\subsection{Example 1}
+\subsection{Getting Scaling Symmetries}
+
+Getting the scaling symmetries is the next part of the algorithm. This step is simple to implement in Julia since we have already implemented the function for getting \textit{row} and \textit{column} Hermite Normal Forms and their transforms.
+
+First we take the \textit{row} Hermite Normal Form and Hermite Transform of \(K\). In the example of the Predator-Prey model we get using the code:
+\begin{lstlisting}
+H, U = hnf_with_transform(K)
+\end{lstlisting}
+
+That:
+\[
+    H = \begin{pmatrix}
+        1 & 0 & 0 & 0 & -1 & -1 & 0 & 0 \\
+        0 & 1 & 0 & 0 & 1  & 0  & 0 & 0 \\
+        0 & 0 & 1 & 0 & 1  & 1  & 0 & 0 \\
+        0 & 0 & 0 & 1 & 0  & 0  & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0  & 0  & 1 & 0 \\
+        0 & 0 & 0 & 0 & 0  & 0  & 0 & 1 \\
+        0 & 0 & 0 & 0 & 0  & 0  & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0  & 0  & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0  & 0  & 0 & 0
+    \end{pmatrix}.
+\]
+
+And that:
+\[
+    U = \begin{pmatrix}
+        0 & 0  & 0 & 0  & 0 & 0  & 1  & 1  & 0  \\
+        0 & -1 & 0 & -1 & 0 & -1 & -1 & -1 & 1  \\
+        0 & 1  & 0 & 0  & 0 & 0  & 0  & 0  & 0  \\
+        0 & 0  & 0 & 1  & 0 & 0  & 0  & 0  & 0  \\
+        0 & 0  & 0 & 1  & 0 & 1  & 0  & -1 & 0  \\
+        0 & 0  & 0 & -1 & 0 & 0  & 0  & 1  & 0  \\
+        1 & 1  & 0 & 0  & 0 & 0  & 1  & 1  & 0  \\
+        0 & 0  & 1 & 1  & 0 & 0  & 0  & -1 & 0  \\
+        0 & 0  & 0 & 0  & 1 & 1  & 0  & 0  & -1
+    \end{pmatrix}.
+\]
+
+We see here that \(H\) has \(3\) zero rows so this means that \(r = 3\). Thus we set \(A\) to be the last \(3\) rows of \(U\) and we get that:
+\[
+    A = \begin{pmatrix}
+        1 & 1 & 0 & 0 & 0 & 0 & 1 & 1  & 0  \\
+        0 & 0 & 1 & 1 & 0 & 0 & 0 & -1 & 0  \\
+        0 & 0 & 0 & 0 & 1 & 1 & 0 & 0  & -1
+    \end{pmatrix}.
+\]
+
+Here \(A\) is our scaling symmetry matrix.
+
+\subsection{Getting our Normal Hermite Transforms}
+
+This step is simple. We set \(V\) to be the Hermite Normal Transform of \(A\) and \(W\) to be the inverse of \(V\). The code is simply as such:
+\begin{lstlisting}
+_, V = hnf_with_normal_transform_column(A)
+\end{lstlisting}
+
+We get that:
+\[
+    V = \begin{pmatrix}
+        1 & 0 & 0 & -1 & 0  & 0  & -1 & -1 & 0 \\
+        0 & 0 & 0 & 1  & 0  & 0  & 0  & 0  & 0 \\
+        0 & 1 & 0 & 0  & -1 & 0  & 0  & 1  & 0 \\
+        0 & 0 & 0 & 0  & 1  & 0  & 0  & 0  & 0 \\
+        0 & 0 & 1 & 0  & 0  & -1 & 0  & 0  & 1 \\
+        0 & 0 & 0 & 0  & 0  & 1  & 0  & 0  & 0 \\
+        0 & 0 & 0 & 0  & 0  & 0  & 1  & 0  & 0 \\
+        0 & 0 & 0 & 0  & 0  & 0  & 0  & 1  & 0 \\
+        0 & 0 & 0 & 0  & 0  & 0  & 0  & 0  & 1
+    \end{pmatrix}.
+\]
+
+And:
+\[
+    W = \begin{pmatrix}
+        1 & 1 & 0 & 0 & 0 & 0 & 1 & 1  & 0  \\
+        0 & 0 & 1 & 1 & 0 & 0 & 0 & -1 & 0  \\
+        0 & 0 & 0 & 0 & 1 & 1 & 0 & 0  & -1 \\
+        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  & 0  \\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0  & 0  \\
+        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0  & 0  \\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0  & 0  \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1  & 0  \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0  & 1
+    \end{pmatrix}.
+\]
+
+We then care about \(V_{\mathfrak{n}}\) and \(W_{\mathfrak{d}}\) which are the last \(n - r\) columns and rows respectively of \(V\) and \(W\). So in this case:
+\[
+    V_{\mathfrak{n}} = \begin{pmatrix}
+        -1 & 0  & 0  & -1 & -1 & 0 \\
+        1  & 0  & 0  & 0  & 0  & 0 \\
+        0  & -1 & 0  & 0  & 1  & 0 \\
+        0  & 1  & 0  & 0  & 0  & 0 \\
+        0  & 0  & -1 & 0  & 0  & 1 \\
+        0  & 0  & 1  & 0  & 0  & 0 \\
+        0  & 0  & 0  & 1  & 0  & 0 \\
+        0  & 0  & 0  & 0  & 1  & 0 \\
+        0  & 0  & 0  & 0  & 0  & 1
+    \end{pmatrix}.
+\]
+
+And:
+\[
+    W_{\mathfrak{n}} = \begin{pmatrix}
+        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1
+    \end{pmatrix}.
+\]
+
+\subsection{Putting Everything Together}
+
+The final part of the algorithm is to use section 6.2 of \cite{Hubert2013}. What we do here in Julia is to create a new destination PolynomialRing for the new reparametrized ODE. We focus on equation (16) of the paper which is:
+\[
+    \diff{y}{t} = y \star F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}.
+\]
+
+In order to use this equation we need to get the \(\mathbb{R}^n \to \mathbb{R}^n\) function \(F\). To do this we use the definition that \(\diff{z}{t} = z \star F(z)\), where \(z\) is a vector of all the variables in the ODE to see find that with:
+\[
+    \diff{z}{t} =
+    \begin{pmatrix}
+        \diff{K}{t} \\
+        \diff{d}{t} \\
+        \diff{h}{t} \\
+        \diff{k}{t} \\
+        \diff{r}{t} \\
+        \diff{s}{t} \\
+        \diff{n}{t} \\
+        \diff{p}{t} \\
+        \diff{t}{t}
+    \end{pmatrix} =
+    \begin{pmatrix}
+        0                                           \\
+        0                                           \\
+        0                                           \\
+        0                                           \\
+        0                                           \\
+        0                                           \\
+        0                                           \\
+        n (r (1 - \frac{n}{K} - k \frac{p}{n + d})) \\
+        sp (1 - h \frac{p}{n})                      \\
+        1
+    \end{pmatrix}.
+\]
+
+So
+\[
+    F(z) =
+    \begin{pmatrix}
+        0                                       \\
+        0                                       \\
+        0                                       \\
+        0                                       \\
+        0                                       \\
+        0                                       \\
+        0                                       \\
+        r (1 - \frac{n}{K} - k \frac{p}{n + d}) \\
+        s(1 - h \frac{p}{n})                    \\
+        \frac{1}{t}
+    \end{pmatrix}
+\]
+
+With us knowing what \(F\) is, all that is left to do is to put all of this into Julia code and we are left with a function that takes in the ode, \(V_{\mathfrak{n}}\) and \(W_{\mathfrak{d}}\) and that outputs the new parameterizations of the ode.
+\begin{lstlisting}
+prop_6_2(ode, V_n, W_d)
+\end{lstlisting}
+
+Running this code gives us the new reparameterization of the ODE which is:
+
+\begin{align*}
+    \diff{y_1}{t} & = 0                                                                    \\
+    \diff{y_2}{t} & = 0                                                                    \\
+    \diff{y_3}{t} & = 0                                                                    \\
+    \diff{y_4}{t} & = \frac{-y_1 y_4^2 + y_1 y_4 - y_2 y_4 y_6 - y_4^3 + y_4^2}{y_1 + y_4} \\
+    \diff{y_5}{t} & = \frac{y_3 y_4 y_5 - y_3 y_5^2}{y_4}                                  \\
+    \diff{y_6}{t} & = 1
+\end{align*}
+
+In order to see what each original variable corresponds to in terms of the new variables, we can look at the matrix \(W_{\mathfrak{d}}\). The rows correspond to the original parameters (in this case \(K, d, \dots, p, t\) and the columns representing the power of the new parameters \(y_1, \dots\). So for example in this case:
+
+We have the substitution from:
+\[
+    K \mapsto 1, \qquad d \mapsto y_1, \qquad h \mapsto 1, \qquad k \mapsto y_2, \qquad r \mapsto 1, \qquad s \mapsto y_3, \qquad n \mapsto y_3, \qquad p \mapsto y_5, \qquad t \mapsto y_6
+\]
+
+\section{Full Example}
+
+This section gives another example with the full workthrough of the algorithm.
 
 Let us say that we are working with the Verhulst Model of Logistic growth, defined by the differential equation given by:
 \[
@@ -485,11 +704,11 @@ ode_verhulst = @ODEmodel(
 )
 \end{lstlisting}
 
-We then following the use of the function that we implemented and previously explained \texttt{ode\_to\_matrix}. This function allows us to extract a matrix that describes the equation. We get the result, with variable order \texttt{n, K, r, t}, to be:
+We then following the use of the function that we implemented and previously explained \texttt{ode\_to\_matrix}. This function allows us to extract a matrix that describes the equation. We get the result, with variable order \texttt{k, r, n, t}, to be:
 \[
     \begin{pmatrix}
-        1  & 0 \\
         -1 & 0 \\
+        1  & 0 \\
         1  & 1 \\
         1  & 1
     \end{pmatrix}
@@ -510,40 +729,38 @@ To do this we use the \texttt{hnf\_with\_transform} from Nemo \cite{nemo}, which
 And a corresponding Hermite Multiplier:
 \[
     U = \begin{pmatrix}
-        1  & 0 & 0 & 0  \\
-        -1 & 0 & 0 & 1  \\
-        0  & 0 & 1 & -1 \\
-        1  & 1 & 0 & 0
+        -1 & 0  & 0 & 0 \\
+        1  & 1  & 0 & 0 \\
+        1  & 0  & 1 & 0 \\
+        0  & -1 & 0 & 1
     \end{pmatrix}
 \]
 
-Proposition 5.1 tells us that we look at the number of zero rows of \(H\), which we call \(r\), then taking the last \(r\) rows of \(U\) gives us the matrix \(A\) which gives us a matrix that describes the scaling symmetries of the system.
+Proposition 5.1 tells us that we look at the number of zero rows of \(H\), which we call \(r\). In this case \(r = 2\). then taking the last \(r\) rows of \(U\) gives us the matrix \(A\) which gives us a matrix that describes the scaling symmetries of the system.
 \[
     A = \begin{pmatrix}
-        0 & 0 & 1 & -1 \\
-        1 & 1 & 0 & 0
+        1 & 0  & 1 & 0 \\
+        0 & -1 & 0 & 1
     \end{pmatrix}
 \]
-
-% TODO: Describe in full detail how the scaling symmetries are described here.
 
 The final step here is to get the \textit{column} Hermite Normal Form of \(A\), which is used to determine the new system. Using the new \texttt{hnf\_with\_normal\_transform\_column} function that we implemented earlier, we can find that our Normal Hermite Multiplier is:
 \[
     V = \begin{pmatrix}
-        0 & 1 & -1 & 0 \\
-        0 & 0 & 1  & 0 \\
-        1 & 0 & 0  & 1 \\
-        0 & 0 & 0  & 1
+        1 & 0  & -1 & 0 \\
+        0 & -1 & 0  & 1 \\
+        0 & 0  & 1  & 0 \\
+        0 & 0  & 0  & 1
     \end{pmatrix}
 \]
 
 We then can easily find its inverse \(W\) to be \(V^{-1}\), so:
 \[
     W = \begin{pmatrix}
-        0 & 0 & 1 & -1 \\
-        1 & 1 & 0 & 0  \\
-        0 & 1 & 0 & 0  \\
-        0 & 0 & 0 & 1
+        1 & 0  & 1 & 0 \\
+        0 & -1 & 0 & 1 \\
+        0 & 0  & 1 & 0 \\
+        0 & 0  & 0 & 1
     \end{pmatrix}
 \]
 
@@ -552,9 +769,9 @@ Now that we have these matrices, what is left to do is to follow the last steps 
 The last steps of the algorithm require us to split \(V\) into \(V_{\mathfrak{i}}\) and \(V_{\mathfrak{n}}\). Again following the algorithm in \cite{Hubert2013}, \(V_{\mathfrak{i}}\) is the first \(r\) columns of \(V\) and \(V_{\mathfrak{n}}\) is the last \(n - r\) columns of \(V\). Since \(r = 2\) in our example, we get that:
 \[
     V_{\mathfrak{i}} = \begin{pmatrix}
-        0 & 1 \\
-        0 & 0 \\
-        1 & 0 \\
+        1 & 0  \\
+        0 & -1 \\
+        0 & 0  \\
         0 & 0
     \end{pmatrix}
 \]
@@ -563,8 +780,8 @@ and that:
 \[
     V_{\mathfrak{n}} = \begin{pmatrix}
         -1 & 0 \\
-        1  & 0 \\
         0  & 1 \\
+        1  & 0 \\
         0  & 1
     \end{pmatrix}.
 \]
@@ -572,15 +789,15 @@ and that:
 Similarly, \(W\) is split into \(W_{\mathfrak{u}}\) and \(W_{\mathfrak{d}}\), where \(W_{\mathfrak{u}}\) is the first \(r\) rows of \(W\) and \(W_{\mathfrak{d}}\) is the last \(n - r\) rows of \(W\). In this example we therefore have that:
 \[
     W_{\mathfrak{u}} = \begin{pmatrix}
-        0 & 0 & 1 & -1 \\
-        1 & 1 & 0 & 0
+        1 & 0  & 1 & 0 \\
+        0 & -1 & 0 & 1
     \end{pmatrix}.
 \]
 
 and that:
 \[
     W_{\mathfrak{d}} = \begin{pmatrix}
-        0 & 1 & 0 & 0 \\
+        0 & 0 & 1 & 0 \\
         0 & 0 & 0 & 1
     \end{pmatrix}.
 \]
@@ -590,21 +807,21 @@ The matrices we care about here are \(V_{\mathfrak{n}}\) and \(W_{\mathfrak{d}}\
     \diff{y}{t} \star F(y^{W_{\mathfrak{n}}}) \cdot V_{\mathfrak{n}}
 \]
 
-First we have to define what \(F\) defines here. We have that \(\diff{z}{t} = z\star F(z)\), where \(z\) is a vector of all the variables in the ODE, so in this example \(z = \begin{pmatrix} n & k & r & t \end{pmatrix}\). So:
+First we have to define what \(F\) defines here. We have that \(\diff{z}{t} = z\star F(z)\), where \(z\) is a vector of all the variables in the ODE, so in this example \(z = \begin{pmatrix} k & r & n & t \end{pmatrix}\). So:
 \begin{align*}
     \diff{z}{t}
      & = \begin{pmatrix}
-             \diff{n}{t} & \diff{k}{t} & \diff{r}{t} & \diff{t}{t}
+             \diff{k}{t} & \diff{r}{t} & \diff{n}{t} & \diff{t}{t}
          \end{pmatrix} \\
      & = \begin{pmatrix}
-             \frac{rnk - rn^2}{k} & 0 & 0 & 1 \\
+             0 & 0 & \frac{rnk - rn^2}{k} & 1 \\
          \end{pmatrix}
 \end{align*}
 
 Therefore, we have that:
 \[
     F(z) = \begin{pmatrix}
-        \frac{rk - rn}{k} & 0 & 0 & \frac{1}{t}
+        0 & 0 & \frac{rk - rn}{k} & \frac{1}{t}
     \end{pmatrix}
 \]
 
@@ -622,14 +839,14 @@ We then take \(y^{W_{\mathfrak{d}}}\). The definition of how to take a vector of
              y_1 & y_2
          \end{pmatrix}^{
     \begin{pmatrix}
-        0 & 1 & 0 & 0 \\
+        0 & 0 & 1 & 0 \\
         0 & 0 & 0 & 1
     \end{pmatrix}}                                             \\
      & = \begin{pmatrix}
-             y_1^0 y_2^0 & y_1^1 y_2^0 & y_1^0 y_2^0 & y_1^0 y_2^1
+             y_1^0 y_2^0 & y_1^0 y_2^0 & y_1^1 y_2^0 & y_1^0 y_2^1
          \end{pmatrix} \\
      & = \begin{pmatrix}
-             1 & y_1 & 1 & y_2
+             1 & 1 & y_1 & y_2
          \end{pmatrix}
 \end{align*}
 
@@ -637,10 +854,10 @@ We then have to take \(F(y^{W_{\mathfrak{d}}})\). Since our variable order is \(
 \begin{align*}
     F(y^{W_{\mathfrak{d}}})
      & = F(\begin{pmatrix}
-               1 & y_1 & 1 & y_2
-           \end{pmatrix})                         \\
+               1 & 1 & y_1 & y_2
+           \end{pmatrix})             \\
      & = \begin{pmatrix}
-             \frac{y_1 - 1}{y_1} & 0 & 0 & \frac{1}{y_2}
+             0 & 0 & 1 - y_1 & \frac{1}{y_2}
          \end{pmatrix}
 \end{align*}
 
@@ -648,40 +865,33 @@ Now, \(F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}\):
 \[
     F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}} =
     \begin{pmatrix}
-        \frac{1 - y_1}{y_1} & \frac{1}{y_2}
+        1 - y_1 & \frac{1}{y_2}
     \end{pmatrix}
 \]
 
 Then the final result we get that
 \begin{align*}
     \diff{y}{t}
-    & = y \star (F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}) \\
-    & = \begin{pmatrix} 1 - y_1 & 1 \end{pmatrix}
+     & = y \star (F(y^{W_{\mathfrak{d}}}) \cdot V_{\mathfrak{n}}) \\
+     & = \begin{pmatrix} y_1 - y_1^2 & 1 \end{pmatrix}
 \end{align*}
 
 With this we can conclude and get our final new reparametrized differential equation to be:
 \begin{align*}
-    \diff{y_1}{t} & = 1 - y_1 \\
+    \diff{y_1}{t} & = y_1 - y_1^2 \\
     \diff{y_2}{t} & = 1
 \end{align*}
 
 Which as we can tell is much simpler than the equation we had in the beginning.
 
-\subsection{Example 2}
-
-Let us look at a different example, the Schakenberg Model for a Simple Chemical Equation with Limit Cycle. The differential equation is as follows:
-\begin{align*}
-    \diff{x}{t} & = a - kx + hx^2 y, \\
-    \diff{y}{t} & = b - hx^2 y.
-\end{align*}
-
-Again we start by converting this differential equation into a
-
-% TODO: Do another implementation.
-
-% TODO: I would want the explanation here to include a output variable so that it would be more relevant to a user.
+Finally we can look at how the substitution looks by looking at \(W_{\mathfrak{d}}\). In this case:
+\[
+    k \mapsto 1, \qquad r \mapsto 1, \qquad n \mapsto y_1, \qquad t \mapsto y_2.
+\]
 
 \section{Conclusion}
+
+In this thesis, we implemented a novel methodology for the reparameterization of ordinary differential equation (ODE) models by using the scaling invariants and symmetry reductions. The approach, based on the algorithm by Hubert and Labahn \cite{Hubert2013}, has been implemented through the Julia programming language.
 
 \section{Potential Improvements}
 

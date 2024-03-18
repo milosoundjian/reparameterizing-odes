@@ -95,3 +95,8 @@ hnf(A)
 hnf_column(A)
 
 hnf_with_transform_column(A)[2]
+
+odepp = @ODEmodel(
+    n'(t) = n * (r * (1 - n/K - k * (p / (n+d)))),
+    p'(t) = s * p * (1 - h * (p / n))
+)

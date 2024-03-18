@@ -18,12 +18,10 @@ function hnf_with_normal_transform_column(A)
     # We then get the HNF of this matrix
     H_star, V_star = hnf_with_transform_column(B)
 
-    # return H_star
-
     # V_i is the last r columns of H_star with the bottom r rows removed
     V_i = H_star[1:n, n-r+1:n]
 
-    # V_n is the first n-r columns of H_star with the top n rows removed
+    # V_n is the first n-r columns of H_star with the bottom r rows removed
     V_n = H_star[1:n, 1:n-r]
 
     V = hcat(V_i, V_n)
